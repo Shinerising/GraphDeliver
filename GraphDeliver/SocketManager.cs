@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace GraphDeliver
 {
-    internal class Status
+    internal class SocketManager
     {
         private readonly SocketTCPClient _clientA;
         private readonly SocketTCPClient _clientB;
@@ -23,6 +23,8 @@ namespace GraphDeliver
         private IPAddress _ipAddressB = null;
         private const int _portB = 1000;
 
+        private int _receiveCountA = 0;
+        private int _receiveCountB = 0;
         private int _errorCountA = 0;
         private int _errorCountB = 0;
         private bool _isEnabledA = false;
@@ -30,7 +32,18 @@ namespace GraphDeliver
         private bool _isConnectedA = false;
         private bool _isConnectedB = false;
 
-        public Status()
+        public event Action<int, byte[]> DeviceStatusReceived;
+        public event Action<string> MessageReceived;
+        public event Action<int, byte[]> BoardStatusReceived;
+
+        public bool IsEnabledA => _isEnabledA;
+        public bool IsEnabledB => _isEnabledB;
+        public bool IsConnectedA => _clientA != null && _clientA.IsConnected && _isConnectedA;
+        public bool IsConnectedB => _clientB != null && _clientB.IsConnected && _isConnectedB;
+        public string NameA => _clientB != null ? $"{_ipAddressA}:{_portA}" : "未启用";
+        public string NameB => _clientB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
+
+        public SocketManager()
         {
             _clientA = new SocketTCPClient();
             _clientB = new SocketTCPClient();
@@ -39,6 +52,7 @@ namespace GraphDeliver
 
             _cancellation = new CancellationTokenSource();
             _task = new Task(SocketReceivingProcedure, _cancellation.Token);
+            _task.Start();
         }
 
         private void SetClient()
@@ -68,8 +82,9 @@ namespace GraphDeliver
 
             _clientA.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
             {
-                if (_isConnectedA && _clientA.IsConnected)
+                if (_clientA.IsConnected)
                 {
+                    _receiveCountA += 1;
                     DataReceived(buffer, offset, count);
                 }
             });
@@ -86,8 +101,9 @@ namespace GraphDeliver
 
             _clientB.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
             {
-                if (_isConnectedB && _clientB.IsConnected)
+                if (_clientB.IsConnected)
                 {
+                    _receiveCountB += 1;
                     DataReceived(buffer, offset, count);
                 }
             });
@@ -95,6 +111,11 @@ namespace GraphDeliver
 
         private void DataReceived(byte[] buffer, int offset, int count)
         {
+            if (buffer == null || buffer.Length == 0 || count == 0 || count > buffer.Length || count < 2)
+            {
+                return;
+            }
+
             byte[] data = new byte[count];
             Buffer.BlockCopy(buffer, offset, data, 0, count);
 
@@ -103,11 +124,34 @@ namespace GraphDeliver
             {
                 case 0x0001:
                     {
-                        
+                        if (count < 8)
+                        {
+                            break;
+                        }
+                        int deviceId = data[4];
+                        byte[] status = new byte[count - 8];
+                        Buffer.BlockCopy(data, 8, status, 0, count - 8);
+                        DeviceStatusReceived?.Invoke(deviceId, status);
+                    }
+                    break;
+                case 0x0008:
+                    {
+                        if (count < 8)
+                        {
+                            break;
+                        }
+                        int hostId = data[4];
+                        byte[] status = new byte[count - 8];
+                        Buffer.BlockCopy(data, 8, status, 0, count - 8);
+                        BoardStatusReceived?.Invoke(hostId, status);
                     }
                     break;
                 case 0x00f0:
                     {
+                        if (count < 8)
+                        {
+                            break;
+                        }
                         bool isCritical = false;
                         switch (data[4])
                         {
@@ -132,6 +176,7 @@ namespace GraphDeliver
                                 break;
                         }
                         string message = Encoding.ASCII.GetString(data, 8, count - 8) + (isCritical ? "$" : "");
+                        MessageReceived?.Invoke(message);
                     }
                     break;
                 default:
@@ -151,20 +196,49 @@ namespace GraphDeliver
                 _clientB.Start(_ipAddressB, _portB);
             }
 
+            int receiveCountA = 0;
+            int receiveCountB = 0;
+
             while (!_cancellation.Token.IsCancellationRequested)
             {
-                if (_errorCountA > 5)
+                if (_isEnabledA)
                 {
-                    _errorCountA = 0;
-                    _isConnectedA = false;
-                    _clientA.Restart(_ipAddressA, _portA);
+                    if (_receiveCountA == receiveCountA)
+                    {
+                        _errorCountA += 1;
+                    }
+                    else
+                    {
+                        receiveCountA = _receiveCountA;
+                        _errorCountA = 0;
+                    }
+
+                    if (_errorCountA > 5)
+                    {
+                        _errorCountA = 0;
+                        _isConnectedA = false;
+                        _clientA.Restart(_ipAddressA, _portA);
+                    }
                 }
 
-                if (_errorCountB > 5)
+                if (_isEnabledB)
                 {
-                    _errorCountA = 0;
-                    _isConnectedB = false;
-                    _clientB.Restart(_ipAddressB, _portB);
+                    if (_receiveCountB == receiveCountB)
+                    {
+                        _errorCountB += 1;
+                    }
+                    else
+                    {
+                        receiveCountB = _receiveCountB;
+                        _errorCountB = 0;
+                    }
+
+                    if (_errorCountB > 5)
+                    {
+                        _errorCountA = 0;
+                        _isConnectedB = false;
+                        _clientB.Restart(_ipAddressB, _portB);
+                    }
                 }
 
                 Thread.Sleep(1000);
