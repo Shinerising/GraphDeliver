@@ -69,10 +69,19 @@ namespace GraphDeliver
             {
                 while (true)
                 {
-                    while (logQueue.Count > 0)
+                    lock (logQueue)
                     {
-                        var pair = logQueue.Dequeue();
-                        WriteLog(pair.Key, pair.Value);
+                        while (logQueue.Count > 0)
+                        {
+                            var pair = logQueue.Dequeue();
+
+                            if (string.IsNullOrEmpty(pair.Key) || string.IsNullOrEmpty(pair.Value))
+                            {
+                                continue;
+                            }
+
+                            WriteLog(pair.Key, pair.Value);
+                        }
                     }
 
                     Thread.Sleep(500);
@@ -87,11 +96,14 @@ namespace GraphDeliver
                 Initialize();
             }
 
-            logQueue.Enqueue(new KeyValuePair<string, string>(name, text));
-
-            while (logQueue.Count > 256)
+            lock (logQueue)
             {
-                logQueue.Dequeue();
+                logQueue.Enqueue(new KeyValuePair<string, string>(name, text));
+
+                while (logQueue.Count > 256)
+                {
+                    logQueue.Dequeue();
+                }
             }
         }
 

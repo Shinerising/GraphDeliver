@@ -255,7 +255,7 @@ namespace GraphDeliver
 
                     if (_errorCountB > 5)
                     {
-                        _errorCountA = 0;
+                        _errorCountB = 0;
                         _isConnectedB = false;
                         _clientB.Restart(_ipAddressB, _portB);
 

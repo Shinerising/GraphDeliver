@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GraphDeliver"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=local:Status}"
-        Title="自动化串口文件传输工具" Width="380" Height="480" MinWidth="280" MinHeight="360" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Closing="Window_Closing" KeyDown="Window_KeyDown" Icon="/app.ico">
+        Title="自动化串口文件传输工具" Width="380" Height="480" MinWidth="280" MinHeight="360" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Closing="Window_Closing" KeyDown="Window_KeyDown">
     <Control>
         <Control.Resources>
             <Style TargetType="Label">
@@ -60,7 +59,7 @@
         </Control.Resources>
         <Control.Template>
             <ControlTemplate>
-                <Grid x:Name="Grid" Margin="4,2">
+                <Grid x:Name="Grid" Margin="4,2" d:DataContext="{d:DesignInstance Type=local:Status}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="0" x:Name="GridColumnSecond"/>
@@ -159,6 +158,10 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Label Grid.Column="0" Content="网络信息"/>
+                        <StackPanel Grid.Column="1" Margin="4,0" Orientation="Horizontal">
+                            <Label Content="{Binding SocketInfoA}" Style="{StaticResource Label_Status}" IsEnabled="{Binding IsSocketConnectedA}" ToolTip="A机状态"/>
+                            <Label Content="{Binding SocketInfoB}" Style="{StaticResource Label_Status}" IsEnabled="{Binding IsSocketConnectedB}" ToolTip="B机状态"/>
+                        </StackPanel>
                     </Grid>
                     <Grid Grid.Row="3" Margin="0,2">
                         <Grid.ColumnDefinitions>

@@ -12,12 +12,22 @@ namespace GraphDeliver
 {
     public class Status : CustomINotifyPropertyChanged
     {
+        private readonly CancellationTokenSource _cancellation;
+        private readonly Task _task;
+
         private readonly SerialManager _serialManager;
         private readonly SocketManager _socketManager;
         private readonly DataManager _dataManager;
+
+        public string PortInfo => _serialManager.PortInfo;
+        public string SocketInfoA => _socketManager.NameA;
+        public bool IsSocketConnectedA => _socketManager.IsConnectedA;
+        public string SocketInfoB => _socketManager.NameB;
+        public bool IsSocketConnectedB => _socketManager.IsConnectedB;
+
         public Status()
         {
-            _serialManager = new SerialManager();
+            _serialManager = new SerialManager(AppSettings.ComPort, AppSettings.BaudRate, AppSettings.Parity, AppSettings.DataBits, AppSettings.StopBits);
 
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressA, out IPAddress ipAddressA, out int portA);
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressB, out IPAddress ipAddressB, out int portB);
@@ -37,10 +47,26 @@ namespace GraphDeliver
             _socketManager.DeviceStatusReceived += SocketManager_DeviceStatusReceived;
             _socketManager.BoardStatusReceived += SocketManager_BoardStatusReceived;
             _socketManager.MessageReceived += SocketManager_MessageReceived;
+
+            _cancellation = new CancellationTokenSource();
+            _task = new Task(MonitoringProcedure, _cancellation.Token);
+            _task.Start();
+        }
+
+        private void MonitoringProcedure()
+        {
+            while (!_cancellation.Token.IsCancellationRequested)
+            {
+                Notify(new { IsSocketConnectedA, IsSocketConnectedB });
+
+                Thread.Sleep(500);
+            }
         }
 
         public void Dispose()
         {
+            _cancellation.Cancel();
+
             _serialManager.Dispose();
             _socketManager.Dispose();
         }
