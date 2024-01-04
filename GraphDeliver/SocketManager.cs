@@ -18,10 +18,10 @@ namespace GraphDeliver
         private readonly CancellationTokenSource _cancellation;
         private readonly Task _task;
 
-        private IPAddress _ipAddressA = null;
-        private const int _portA = 1000;
-        private IPAddress _ipAddressB = null;
-        private const int _portB = 1000;
+        private readonly IPAddress _ipAddressA;
+        private readonly int _portA = 1000;
+        private readonly IPAddress _ipAddressB;
+        private readonly int _portB = 1000;
 
         private int _receiveCountA = 0;
         private int _receiveCountB = 0;
@@ -47,10 +47,19 @@ namespace GraphDeliver
         public string NameB => _clientB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
         public bool IsConnected { get; set; }
 
-        public SocketManager()
+        public SocketManager(IPAddress ipAddressA, IPAddress ipAddressB, int portA = 1000, int portB = 1000)
         {
             _clientA = new SocketTCPClient();
             _clientB = new SocketTCPClient();
+
+            _isEnabledA = ipAddressA != null;
+            _isEnabledB = ipAddressB != null;
+
+            _ipAddressA = ipAddressA;
+            _ipAddressB = ipAddressB;
+
+            _portA = portA;
+            _portB = portB;
 
             SetClient();
 
@@ -61,19 +70,6 @@ namespace GraphDeliver
 
         private void SetClient()
         {
-            string ipAddressA = "";
-            string ipAddressB = "";
-
-            if (!string.IsNullOrEmpty(ipAddressA))
-            {
-                _isEnabledA = IPAddress.TryParse(ipAddressA, out _ipAddressA);
-            }
-
-            if (!string.IsNullOrEmpty(ipAddressB))
-            {
-                _isEnabledB = IPAddress.TryParse(ipAddressB, out _ipAddressB);
-            }
-
             _clientA.SetConnectHandler((bool flag) =>
             {
                 _isConnectedA = flag;

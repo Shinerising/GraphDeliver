@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +18,10 @@ namespace GraphDeliver
         public Status()
         {
             _serialManager = new SerialManager();
-            _socketManager = new SocketManager();
+
+            CommunicationClient.GetAddressFromString(AppSettings.HostAddressA, out IPAddress ipAddressA, out int portA);
+            CommunicationClient.GetAddressFromString(AppSettings.HostAddressB, out IPAddress ipAddressB, out int portB);
+            _socketManager = new SocketManager(ipAddressA, ipAddressB, portA, portB);
 
             _dataManager = new DataManager();
 

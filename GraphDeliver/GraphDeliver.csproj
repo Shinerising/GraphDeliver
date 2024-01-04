@@ -57,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AppSettings.cs" />
     <Compile Include="DataManager.cs" />
     <Compile Include="ListBoxBehavior.cs" />
     <Compile Include="LogHelper.cs" />

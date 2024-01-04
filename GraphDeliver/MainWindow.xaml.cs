@@ -34,17 +34,9 @@ namespace GraphDeliver
 
         private void CheckAutoRun()
         {
-            if (ConfigurationManager.AppSettings["autorun"]?.ToUpper() == "TRUE")
+            if (AppSettings.IsAutoRun)
             {
-                if (!int.TryParse(ConfigurationManager.AppSettings["waittime"], out int wait))
-                {
-                    wait = 10000;
-                }
-                if (!int.TryParse(ConfigurationManager.AppSettings["retrycount"], out int retry))
-                {
-                    retry = 5;
-                }
-                status.DelayOpen(1000, wait, retry);
+                status.DelayOpen(1000, AppSettings.WaitTime, AppSettings.RetryCount);
             }
         }
 
