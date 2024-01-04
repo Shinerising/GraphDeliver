@@ -10,9 +10,32 @@ namespace GraphDeliver
     {
         public const int DeviceStatusSize = 105;
         public const int BoardStatusSize = 16;
+
         private readonly List<byte[]> _deviceStatusList = new List<byte[]>();
         private readonly List<byte[]> _boardStatusList = new List<byte[]>(2);
         private readonly List<string> _messageList = new List<string>();
+
+        public DateTime UpdateTime { get; set; }
+
+        public void ClearData()
+        {
+            lock (_deviceStatusList)
+            {
+                _deviceStatusList.Clear();
+            }
+
+            lock (_boardStatusList)
+            {
+                _boardStatusList.Clear();
+            }
+
+            lock (_messageList)
+            { 
+                _messageList.Clear();
+            }
+
+            UpdateTime = DateTime.Now;
+        }
 
         public void ApplyDeviceStatusData(int deviceID, byte[] data)
         {
@@ -30,6 +53,8 @@ namespace GraphDeliver
 
                 Buffer.BlockCopy(data, 0, _deviceStatusList[deviceID], 0, DeviceStatusSize);
             }
+
+            UpdateTime = DateTime.Now;
         }
 
         public byte[] GetAllDeviceData()
@@ -56,6 +81,8 @@ namespace GraphDeliver
                 }
                 _messageList.Add(message);
             }
+
+            UpdateTime = DateTime.Now;
         }
 
         public byte[] PopAllMessageData()
@@ -89,6 +116,8 @@ namespace GraphDeliver
 
                 Buffer.BlockCopy(data, 0, _boardStatusList[index], 0, BoardStatusSize);
             }
+
+            UpdateTime = DateTime.Now;
         }
 
         public byte[] GetAllBoardData()

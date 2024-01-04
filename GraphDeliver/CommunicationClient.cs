@@ -742,8 +742,7 @@ namespace GraphDeliver
         {
             try
             {
-                byte[] data;
-                int count = EscapeData(buffer, out data, index, length);
+                int count = EscapeData(buffer, out byte[] data, index, length);
                 port.Write(data, 0, count);
                 SendCount += 1;
                 SendSize += count;
@@ -1730,8 +1729,7 @@ namespace GraphDeliver
                 ErrorHandler?.Invoke(this, null, SocketError.NotConnected, null);
 
                 socket.Dispose();
-                IPEndPoint point = ConnectEventArgs.RemoteEndPoint as IPEndPoint;
-                if (point != null)
+                if (ConnectEventArgs.RemoteEndPoint is IPEndPoint point)
                 {
                     socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, Type);
                     Start(point.Address, point.Port);

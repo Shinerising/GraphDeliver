@@ -32,6 +32,9 @@ namespace GraphDeliver
         private bool _isConnectedA = false;
         private bool _isConnectedB = false;
 
+        public event Action ClientConnected;
+        public event Action ClientDisconnected;
+        public event Action<string> ErrorOccured;
         public event Action<int, byte[]> DeviceStatusReceived;
         public event Action<string> MessageReceived;
         public event Action<int, byte[]> BoardStatusReceived;
@@ -42,6 +45,7 @@ namespace GraphDeliver
         public bool IsConnectedB => _clientB != null && _clientB.IsConnected && _isConnectedB;
         public string NameA => _clientB != null ? $"{_ipAddressA}:{_portA}" : "未启用";
         public string NameB => _clientB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
+        public bool IsConnected { get; set; }
 
         public SocketManager()
         {
@@ -73,11 +77,18 @@ namespace GraphDeliver
             _clientA.SetConnectHandler((bool flag) =>
             {
                 _isConnectedA = flag;
+                if (flag && !IsConnected)
+                {
+                    IsConnected = true;
+                    ClientConnected?.Invoke();
+                }
             });
 
             _clientA.SetErrorHandler((object sender, Exception e, SocketError error, string message) =>
             {
                 _errorCountA++;
+                message = message ?? e?.Message ?? error.ToString();
+                ErrorOccured?.Invoke(message);
             });
 
             _clientA.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
@@ -92,11 +103,18 @@ namespace GraphDeliver
             _clientB.SetConnectHandler((bool flag) =>
             {
                 _isConnectedB = flag;
+                if (flag && !IsConnected)
+                {
+                    IsConnected = true;
+                    ClientConnected?.Invoke();
+                }
             });
 
             _clientB.SetErrorHandler((object sender, Exception e, SocketError error, string message) =>
             {
                 _errorCountB++;
+                message = message ?? e?.Message ?? error.ToString();
+                ErrorOccured?.Invoke(message);
             });
 
             _clientB.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
@@ -218,6 +236,12 @@ namespace GraphDeliver
                         _errorCountA = 0;
                         _isConnectedA = false;
                         _clientA.Restart(_ipAddressA, _portA);
+
+                        if (!_isConnectedB && IsConnected)
+                        {
+                            IsConnected = false;
+                            ClientDisconnected?.Invoke();
+                        }
                     }
                 }
 
@@ -238,6 +262,12 @@ namespace GraphDeliver
                         _errorCountA = 0;
                         _isConnectedB = false;
                         _clientB.Restart(_ipAddressB, _portB);
+
+                        if (!_isConnectedA && IsConnected)
+                        {
+                            IsConnected = false;
+                            ClientDisconnected?.Invoke();
+                        }
                     }
                 }
 
