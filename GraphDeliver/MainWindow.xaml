@@ -83,11 +83,10 @@
                         <Label Grid.Column="0" Content="串口信息"/>
                         <StackPanel Grid.Column="1" Margin="4,0" Orientation="Horizontal">
                             <Label Content="{Binding PortInfo, FallbackValue=COM1 9600}" Style="{StaticResource Label_Status}" Background="#33AAFF" BorderBrush="#2255AA" Margin="0,0,4,0" ToolTip="串口参数" MouseDown="Label_Com_MouseDown"/>
-                            <Label Content="ON" Style="{StaticResource Label_Status}" IsEnabled="{Binding Status_Open}" ToolTip="开启状态"/>
+                            <Label Content="ON" Style="{StaticResource Label_Status}" IsEnabled="{Binding IsPortOpen}" ToolTip="开启状态"/>
                             <Label Content="CTS" Style="{StaticResource Label_Status}" IsEnabled="{Binding Status_CTS}" ToolTip="CTS状态"/>
                             <Label Content="DSR" Style="{StaticResource Label_Status}" IsEnabled="{Binding Status_DSR}" ToolTip="DSR状态"/>
-                            <Label Content="DCD" Style="{StaticResource Label_Status}" IsEnabled="{Binding Status_CD}" ToolTip="DCD状态"/>
-                            <Label Content="RI" Style="{StaticResource Label_Status}" IsEnabled="{Binding Status_RI}" ToolTip="RI状态"/>
+                            <Label Content="CD" Style="{StaticResource Label_Status}" IsEnabled="{Binding Status_CD}" ToolTip="CD状态"/>
                         </StackPanel>
                         <Border Grid.Column="2">
                             <Button Click="Button_Start_Click" ToolTip="打开串口通信">
@@ -96,7 +95,7 @@
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsOpen}" Value="True">
+                                        <DataTrigger Binding="{Binding IsPortOpen}" Value="True">
                                             <Setter Property="Visibility" Value="Collapsed"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -110,7 +109,7 @@
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsOpen}" Value="False">
+                                        <DataTrigger Binding="{Binding IsPortOpen}" Value="False">
                                             <Setter Property="Visibility" Value="Collapsed"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -159,8 +158,8 @@
                         </Grid.ColumnDefinitions>
                         <Label Grid.Column="0" Content="网络信息"/>
                         <StackPanel Grid.Column="1" Margin="4,0" Orientation="Horizontal">
-                            <Label Content="{Binding SocketInfoA}" Style="{StaticResource Label_Status}" IsEnabled="{Binding IsSocketConnectedA}" ToolTip="A机状态"/>
-                            <Label Content="{Binding SocketInfoB}" Style="{StaticResource Label_Status}" IsEnabled="{Binding IsSocketConnectedB}" ToolTip="B机状态"/>
+                            <Label Content="{Binding SocketInfoA, FallbackValue=192.168.100.1:1000}" Style="{StaticResource Label_Status}" IsEnabled="{Binding IsSocketConnectedA}" ToolTip="A机状态"/>
+                            <Label Content="{Binding SocketInfoB, FallbackValue=192.168.100.2:1000}" Style="{StaticResource Label_Status}" IsEnabled="{Binding IsSocketConnectedB}" ToolTip="B机状态"/>
                         </StackPanel>
                     </Grid>
                     <Grid Grid.Row="3" Margin="0,2">

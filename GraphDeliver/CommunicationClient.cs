@@ -293,6 +293,11 @@ namespace GraphDeliver
         /// 通信是否超时
         /// </summary>
         private bool isTimeout = true;
+        public bool Status_CTS => port.IsOpen && port.CtsHolding;
+        public bool Status_DSR => port.IsOpen && port.DsrHolding;
+        public bool Status_CD => port.IsOpen && port.CDHolding;
+        public bool Status_DTR => port.IsOpen && port.DtrEnable;
+        public bool Status_RTS => port.IsOpen && port.RtsEnable;
 
         /// <summary>
         /// 构造函数

@@ -58,6 +58,11 @@ namespace GraphDeliver
         /// 串口参数信息
         /// </summary>
         public string PortInfo => $"{_portName} {_baudRate}";
+        public bool Status_CTS => _serialClient.Status_CTS;
+        public bool Status_DSR => _serialClient.Status_DSR;
+        public bool Status_CD => _serialClient.Status_CD;
+        public bool Status_DTR => _serialClient.Status_DTR;
+        public bool Status_RTS => _serialClient.Status_RTS;
 
         public event Action ClientConnected;
         public event Action ClientDisconnected;

@@ -20,6 +20,13 @@ namespace GraphDeliver
         private readonly DataManager _dataManager;
 
         public string PortInfo => _serialManager.PortInfo;
+        public bool IsPortOpen => _serialManager.IsOpen;
+        public bool IsPortStatusOpen => _serialManager.Status_Open;
+        public bool Status_CTS => _serialManager.Status_CTS;
+        public bool Status_DSR => _serialManager.Status_DSR;
+        public bool Status_CD => _serialManager.Status_CD;
+        public bool Status_DTR => _serialManager.Status_DTR;
+        public bool Status_RTS => _serialManager.Status_RTS;
         public string SocketInfoA => _socketManager.NameA;
         public bool IsSocketConnectedA => _socketManager.IsConnectedA;
         public string SocketInfoB => _socketManager.NameB;
@@ -57,7 +64,7 @@ namespace GraphDeliver
         {
             while (!_cancellation.Token.IsCancellationRequested)
             {
-                Notify(new { IsSocketConnectedA, IsSocketConnectedB });
+                Notify(new { IsPortOpen, IsPortStatusOpen, Status_CTS, Status_DSR, Status_CD, Status_DTR, Status_RTS, IsSocketConnectedA, IsSocketConnectedB });
 
                 Thread.Sleep(500);
             }
