@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 
 namespace GraphDeliver
@@ -9,10 +11,11 @@ namespace GraphDeliver
     internal class DataManager
     {
         public const int DeviceStatusSize = 105;
-        public const int BoardStatusSize = 16;
+        public const int BoardStatusSize = 10;
 
+        private byte _hostOnline = 0x74;
         private readonly List<byte[]> _deviceStatusList = new List<byte[]>();
-        private readonly List<byte[]> _boardStatusList = new List<byte[]>(2);
+        private readonly List<byte[]> _boardStatusList = new List<byte[]>(2) { new byte[BoardStatusSize] };
         private readonly List<string> _messageList = new List<string>();
 
         public DateTime UpdateTime { get; set; }
@@ -103,18 +106,37 @@ namespace GraphDeliver
             return Encoding.ASCII.GetBytes(stringBuilder.ToString());
         }
 
-        public void ApplyBoardStatusData(int boardID, byte[] data)
+        public void ApplyBoardStatusData(int hostID, byte[] data)
         {
+            int offset = 0;
+            int online, backup;
+            if (hostID == 0x74)
+            {
+                online = 0;
+                backup = 1;
+                _hostOnline = 0x74;
+            }
+            else if (hostID == 0x75)
+            {
+                online = 1;
+                backup = 0;
+                _hostOnline = 0x75;
+            }
+            else
+            {
+                return;
+            }
+
             lock (_boardStatusList)
             {
-                int index = boardID - 1;
-
-                if (data.Length < BoardStatusSize)
+                if (data.Length < 106)
                 {
                     return;
                 }
-
-                Buffer.BlockCopy(data, 0, _boardStatusList[index], 0, BoardStatusSize);
+                Buffer.BlockCopy(data, offset + 50, _boardStatusList[online], 0, 3);
+                Buffer.BlockCopy(data, offset + 103, _boardStatusList[backup], 0, 3);
+                new BitArray(data.Skip(offset).Take(50).Select(bit => bit == 0x01).ToArray()).CopyTo(_boardStatusList[online], 3);
+                new BitArray(data.Skip(offset + 53).Take(50).Select(bit => bit == 0x01).ToArray()).CopyTo(_boardStatusList[backup], 3);
             }
 
             UpdateTime = DateTime.Now;
@@ -124,10 +146,11 @@ namespace GraphDeliver
         {
             lock (_boardStatusList)
             {
-                byte[] data = new byte[BoardStatusSize * _boardStatusList.Count];
+                byte[] data = new byte[BoardStatusSize * _boardStatusList.Count + 1];
+                data[0] = _hostOnline;
                 for (int i = 0; i < _boardStatusList.Count; i++)
                 {
-                    Buffer.BlockCopy(_boardStatusList[i], 0, data, i * BoardStatusSize, BoardStatusSize);
+                    Buffer.BlockCopy(_boardStatusList[i], 0, data, i * BoardStatusSize + 1, BoardStatusSize);
                 }
 
                 return data;
@@ -156,17 +179,24 @@ namespace GraphDeliver
             byte[] boardData = GetAllBoardData();
             byte[] messageData = PopAllMessageData();
 
-            byte[] data = new byte[deviceData.Length + boardData.Length + messageData.Length];
+            byte[] data = new byte[deviceData.Length + boardData.Length + messageData.Length + 6];
 
-            Buffer.BlockCopy(deviceData, 0, data, 0, deviceData.Length);
-            Buffer.BlockCopy(boardData, 0, data, deviceData.Length, boardData.Length);
-            Buffer.BlockCopy(messageData, 0, data, deviceData.Length + boardData.Length, messageData.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes((ushort)deviceData.Length), 0, data, 0, 2);
+            Buffer.BlockCopy(deviceData, 0, data, 2, deviceData.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes((ushort)boardData.Length), 0, data, deviceData.Length + 2, 2);
+            Buffer.BlockCopy(boardData, 0, data, deviceData.Length + 4, boardData.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes((ushort)messageData.Length), 0, data, deviceData.Length + boardData.Length + 4, 2);
+            Buffer.BlockCopy(messageData, 0, data, deviceData.Length + boardData.Length + 6, messageData.Length);
 
             byte[] compressedData = CompressByteArray(data);
 
-            byte[] packedData = new byte[compressedData.Length + 4];
-            Buffer.BlockCopy(BitConverter.GetBytes(compressedData.Length), 0, packedData, 0, 4);
-            Buffer.BlockCopy(compressedData, 0, packedData, 4, compressedData.Length);
+            ushort length = (ushort)(compressedData.Length + 2);
+            byte[] packedData = new byte[length + 7];
+            packedData[4] = 0x04;
+            Buffer.BlockCopy(BitConverter.GetBytes(length), 0, packedData, 5, 2);
+            packedData[7] = 0x78;
+            packedData[8] = 0x9C;
+            Buffer.BlockCopy(compressedData, 0, packedData, 9, compressedData.Length);
 
             return packedData;
         }
