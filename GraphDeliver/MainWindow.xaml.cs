@@ -75,6 +75,25 @@ namespace GraphDeliver
 
         private void Button_Start_Click(object sender, RoutedEventArgs e)
         {
+            Button button = sender as Button;
+            button.IsEnabled = true;
+
+            if (status.IsPortOpen)
+            {
+                status.ClosePort();
+            }
+            else
+            {
+                status.OpenPort();
+            }
+
+            Task.Factory.StartNew(() => {
+                Thread.Sleep(3000);
+                Application.Current.Dispatcher?.Invoke((Action)(() =>
+                {
+                    button.IsEnabled = true;
+                }));
+            });
         }
 
         private void Button_Option_Click(object sender, RoutedEventArgs e)

@@ -31,10 +31,10 @@ namespace GraphDeliver
         public bool IsSocketConnectedA => _socketManager.IsConnectedA;
         public string SocketInfoB => _socketManager.NameB;
         public bool IsSocketConnectedB => _socketManager.IsConnectedB;
-
+        public List<string> ConfigList { get; set; } = new List<string>();
         public Status()
         {
-            _serialManager = new SerialManager(AppSettings.ComPort, AppSettings.BaudRate, AppSettings.Parity, AppSettings.DataBits, AppSettings.StopBits);
+            _serialManager = new SerialManager(AppSettings.ComPort, AppSettings.BaudRate, AppSettings.Parity, AppSettings.DataBits, AppSettings.StopBits, AppSettings.SendInterval);
 
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressA, out IPAddress ipAddressA, out int portA);
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressB, out IPAddress ipAddressB, out int portB);
@@ -58,6 +58,8 @@ namespace GraphDeliver
             _cancellation = new CancellationTokenSource();
             _task = new Task(MonitoringProcedure, _cancellation.Token);
             _task.Start();
+
+            ConfigList.Add($"发送间隔:{AppSettings.SendInterval}");
         }
 
         private void MonitoringProcedure()
@@ -142,6 +144,38 @@ namespace GraphDeliver
             _dataManager.PushMessage(message);
         }
 
+        public bool OpenPort()
+        {
+            bool result = _serialManager.OpenPort();
+
+            Notify(new { IsPortOpen });
+
+            if (!result)
+            {
+                AddLog("程序故障", "串口通信打开失败");
+                return false;
+            }
+
+            AddLog("操作记录", "串行端口打开：" + PortInfo);
+
+            return true;
+        }
+        public bool ClosePort()
+        {
+            bool result = _serialManager.ClosePort();
+
+            Notify(new { IsPortOpen });
+
+            if (!result)
+            {
+                AddLog("程序故障", "串口通信关闭失败");
+                return false;
+            }
+
+            AddLog("操作记录", "串行端口关闭：" + PortInfo);
+
+            return true;
+        }
         public void DelayOpen(int delay, int wait = 1000, int retry = 0)
         {
             Task.Factory.StartNew(() =>

@@ -45,6 +45,7 @@ namespace GraphDeliver
         private readonly int _dataBits = 8;
         private readonly Parity _parity = Parity.None;
         private readonly StopBits _stopBits = StopBits.One;
+        private readonly int _sendInterval = 1000;
 
         private readonly SerialClient _serialClient;
 
@@ -69,8 +70,10 @@ namespace GraphDeliver
         public event Action<string> ErrorOccured;
         public event Action<DataContext> DataRequested;
         public event Action<byte[]> DataSended;
-        public SerialManager(string portName, int baudRate, string parity, int dataBits, int stopBits)
+        public SerialManager(string portName, int baudRate, string parity, int dataBits, int stopBits, int interval)
         {
+            _sendInterval = interval;
+
             _portName = portName;
             _baudRate = baudRate;
             _dataBits = dataBits;
@@ -98,7 +101,7 @@ namespace GraphDeliver
             _task = new Task(SendingProcedure, _cancellation.Token);
             _task.Start();
         }
-        public void OpenPort()
+        public bool OpenPort()
         {
             bool result = _serialClient.Start(_portName, _baudRate, _parity, _dataBits, _stopBits);
 
@@ -112,6 +115,14 @@ namespace GraphDeliver
             }
 
             IsOpen = result;
+            return result;
+        }
+        public bool ClosePort()
+        {
+            bool result = _serialClient.Disconnect();
+
+            IsOpen = !result;
+            return result;
         }
         private void SendingProcedure()
         {
@@ -123,7 +134,7 @@ namespace GraphDeliver
 
                 SendData(data);
 
-                Thread.Sleep(1000);
+                Thread.Sleep(_sendInterval);
             }
         }
         private void SendData(byte[] data)
