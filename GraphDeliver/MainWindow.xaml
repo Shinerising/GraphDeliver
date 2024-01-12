@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GraphDeliver"
         mc:Ignorable="d"
-        Title="自动化串口文件传输工具" Width="380" Height="480" MinWidth="280" MinHeight="360" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Closing="Window_Closing" KeyDown="Window_KeyDown">
+        Title="设备状态实时传输工具" Width="380" Height="480" MinWidth="280" MinHeight="360" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Closing="Window_Closing" KeyDown="Window_KeyDown">
     <Control>
         <Control.Resources>
             <Style TargetType="Label">

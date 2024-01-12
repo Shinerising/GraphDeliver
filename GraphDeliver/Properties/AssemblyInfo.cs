@@ -7,12 +7,12 @@ using System.Windows;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("GraphDeliver")]
+[assembly: AssemblyTitle("设备状态实时传输工具")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("GraphDeliver")]
-[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyCompany("CRSCD")]
+[assembly: AssemblyProduct("CROP 编组场远程运维平台")]
+[assembly: AssemblyCopyright("© 2024 Apollo Wayne")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
