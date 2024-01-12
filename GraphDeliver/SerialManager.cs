@@ -109,10 +109,6 @@ namespace GraphDeliver
             {
                 ClientConnected?.Invoke();
             }
-            else if (!result && IsOpen)
-            {
-                ClientDisconnected?.Invoke();
-            }
 
             IsOpen = result;
             return result;
@@ -120,6 +116,11 @@ namespace GraphDeliver
         public bool ClosePort()
         {
             bool result = _serialClient.Disconnect();
+
+            if (result && IsOpen)
+            {
+                ClientDisconnected?.Invoke();
+            }
 
             IsOpen = !result;
             return result;
