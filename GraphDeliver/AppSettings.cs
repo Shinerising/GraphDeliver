@@ -15,5 +15,6 @@ namespace GraphDeliver
         public static bool IsAutoRun => ConfigurationManager.AppSettings["autorun"]?.ToUpper() == "TRUE";
         public static int WaitTime => int.TryParse(ConfigurationManager.AppSettings["waittime"], out int wait) ? wait : 10000;
         public static int RetryCount => int.TryParse(ConfigurationManager.AppSettings["retrycount"], out int retry) ? retry : 5;
+        public static string ExitPassword => ConfigurationManager.AppSettings["exitpassword"] ?? "exit";
     }
 }

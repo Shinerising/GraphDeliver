@@ -98,6 +98,7 @@ namespace GraphDeliver
 
         private void Button_Option_Click(object sender, RoutedEventArgs e)
         {
+            new ConfigWindow(this).ShowDialog();
         }
         private void Button_ClearRecord_Click(object sender, RoutedEventArgs e)
         {
@@ -110,6 +111,15 @@ namespace GraphDeliver
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            string password = AppSettings.ExitPassword;
+            bool? result = PasswordWindow.Show(this, "请输入退出密码", password, "密码确认", false);
+            if (result != true)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            status.Dispose();
         }
 
 
@@ -146,17 +156,14 @@ namespace GraphDeliver
                 ShowSpecialLog();
             }
         }
-
-        private void Label_Folder_MouseDown(object sender, MouseButtonEventArgs e)
+        private void Label_Com_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            Label label = sender as Label;
-
             try
             {
-                string folder = label.Content.ToString().Split('>')[1].TrimStart('[').TrimEnd(']');
+                string command = "/K mode COM" + AppSettings.ComPort;
                 using (Process process = new Process())
                 {
-                    process.StartInfo = new ProcessStartInfo(folder);
+                    process.StartInfo = new ProcessStartInfo("cmd.exe", command) { WorkingDirectory = "/" };
                     process.Start();
                 }
             }
@@ -164,9 +171,6 @@ namespace GraphDeliver
             {
 
             }
-        }
-        private void Label_Com_MouseDown(object sender, MouseButtonEventArgs e)
-        {
         }
     }
 }
