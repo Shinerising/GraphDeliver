@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Net;
-using System.Net.Mail;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -123,6 +121,27 @@ namespace GraphDeliver
             });
         }
 
+        private readonly HashSet<int> _packageIndexSet = new HashSet<int>();
+
+        private bool CheckIfRepeatPackage(int index)
+        {
+            if (_packageIndexSet.Contains(index))
+            {
+                return true;
+            }
+            else
+            {
+                _packageIndexSet.Add(index);
+
+                while (_packageIndexSet.Count > 200)
+                {
+                    _packageIndexSet.Remove(_packageIndexSet.First());
+                }
+
+                return false;
+            }
+        }
+
         private void DataReceived(byte[] buffer, int offset, int count)
         {
             if (buffer == null || buffer.Length == 0 || count == 0 || count > buffer.Length || count < 2)
@@ -140,6 +159,11 @@ namespace GraphDeliver
             int dataLength = BitConverter.ToUInt16(data, 14);
 
             if (length <= 0)
+            {
+                return;
+            }
+
+            if (CheckIfRepeatPackage(index))
             {
                 return;
             }
