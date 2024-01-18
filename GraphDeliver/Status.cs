@@ -198,6 +198,7 @@ namespace GraphDeliver
 
             return true;
         }
+
         public bool ClosePort()
         {
             bool result = _serialManager.ClosePort();
@@ -214,6 +215,7 @@ namespace GraphDeliver
 
             return true;
         }
+
         public void DelayOpen(int delay, int wait = 1000, int retry = 0)
         {
             Task.Factory.StartNew(() =>
@@ -282,6 +284,7 @@ namespace GraphDeliver
 
             }
         }
+
         /// <summary>
         /// 添加一条工作日志信息
         /// </summary>

@@ -1,7 +1,5 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.ComponentModel;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -21,6 +19,9 @@ namespace GraphDeliver
     {
         private readonly Status status;
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         public MainWindow()
         {
             status = new Status();
@@ -100,10 +101,12 @@ namespace GraphDeliver
         {
             new ConfigWindow(this).ShowDialog();
         }
+
         private void Button_ClearRecord_Click(object sender, RoutedEventArgs e)
         {
             status.ClearRecord();
         }
+
         private void Button_ClearLog_Click(object sender, RoutedEventArgs e)
         {
             status.ClearLog();
@@ -122,7 +125,9 @@ namespace GraphDeliver
             status.Dispose();
         }
 
-
+        /// <summary>
+        /// 打开帮助文件
+        /// </summary>
         private void OpenHelpFile()
         {
             string helpFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "README.html");
@@ -141,6 +146,11 @@ namespace GraphDeliver
             }
         }
 
+        /// <summary>
+        /// 窗口按键事件响应
+        /// </summary>
+        /// <param name="sender">事件对象</param>
+        /// <param name="e">事件参数</param>
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.IsRepeat)
