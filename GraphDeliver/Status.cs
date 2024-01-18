@@ -18,19 +18,57 @@ namespace GraphDeliver
         private readonly SerialManager _serialManager;
         private readonly SocketManager _socketManager;
         private readonly DataManager _dataManager;
-
+        /// <summary>
+        /// 串口信息
+        /// </summary>
         public string PortInfo => _serialManager.PortInfo;
+        /// <summary>
+        /// 串口是否打开
+        /// </summary>
         public bool IsPortOpen => _serialManager.IsOpen;
+        /// <summary>
+        /// 串口工作状态
+        /// </summary>
         public bool IsPortStatusOpen => _serialManager.Status_Open;
+        /// <summary>
+        /// 串口CTS状态
+        /// </summary>
         public bool Status_CTS => _serialManager.Status_CTS;
+        /// <summary>
+        /// 串口DSR状态
+        /// </summary>
         public bool Status_DSR => _serialManager.Status_DSR;
+        /// <summary>
+        /// 串口CD状态
+        /// </summary>
         public bool Status_CD => _serialManager.Status_CD;
+        /// <summary>
+        /// 串口DTR状态
+        /// </summary>
         public bool Status_DTR => _serialManager.Status_DTR;
+        /// <summary>
+        /// 串口RTS状态
+        /// </summary>
         public bool Status_RTS => _serialManager.Status_RTS;
+        /// <summary>
+        /// A机通信信息
+        /// </summary>
         public string SocketInfoA => _socketManager.NameA;
+        /// <summary>
+        /// A机是否已连接
+        /// </summary>
         public bool IsSocketConnectedA => _socketManager.IsConnectedA;
+        /// <summary>
+        /// B机通信信息
+        /// </summary>
         public string SocketInfoB => _socketManager.NameB;
+        /// <summary>
+        /// B机是否已连接
+        /// </summary>
         public bool IsSocketConnectedB => _socketManager.IsConnectedB;
+        /// <summary>
+        /// 配置列表
+        /// </summary>
         public List<string> ConfigList { get; set; } = new List<string>();
         public Status()
         {
