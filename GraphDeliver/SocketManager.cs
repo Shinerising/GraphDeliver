@@ -133,41 +133,50 @@ namespace GraphDeliver
             byte[] data = new byte[count];
             Buffer.BlockCopy(buffer, offset, data, 0, count);
 
-            ushort type = BitConverter.ToUInt16(data, 2);
+            int index = BitConverter.ToInt32(data, 0);
+            int length = BitConverter.ToInt32(data, 4);
+            ushort type = BitConverter.ToUInt16(data, 10);
+            int deviceId = BitConverter.ToUInt16(data, 12);
+            int dataLength = BitConverter.ToUInt16(data, 14);
+
+            if (length <= 0)
+            {
+                return;
+            }
+
             switch (type)
             {
                 case 0x0001:
                     {
-                        if (count < 8)
+                        if (count < 16)
                         {
                             break;
                         }
-                        int deviceId = data[4];
-                        byte[] status = new byte[count - 8];
-                        Buffer.BlockCopy(data, 8, status, 0, count - 8);
+                        byte[] status = new byte[dataLength];
+                        Buffer.BlockCopy(data, 16, status, 0, dataLength);
                         DeviceStatusReceived?.Invoke(deviceId, status);
                     }
                     break;
                 case 0x0008:
                     {
-                        if (count < 8)
+                        if (count < 16)
                         {
                             break;
                         }
-                        int hostId = data[4];
-                        byte[] status = new byte[count - 8];
-                        Buffer.BlockCopy(data, 8, status, 0, count - 8);
+                        int hostId = deviceId;
+                        byte[] status = new byte[dataLength];
+                        Buffer.BlockCopy(data, 16, status, 0, dataLength);
                         BoardStatusReceived?.Invoke(hostId, status);
                     }
                     break;
                 case 0x00f0:
                     {
-                        if (count < 8)
+                        if (count < 16)
                         {
                             break;
                         }
                         bool isCritical = false;
-                        switch (data[4])
+                        switch (data[12])
                         {
                             case 9:
                             case 11:
@@ -189,7 +198,7 @@ namespace GraphDeliver
                             default:
                                 break;
                         }
-                        string message = Encoding.ASCII.GetString(data, 8, count - 8) + (isCritical ? "$" : "");
+                        string message = Encoding.ASCII.GetString(data, 16, dataLength) + (isCritical ? "$" : "");
                         MessageReceived?.Invoke(message);
                     }
                     break;
