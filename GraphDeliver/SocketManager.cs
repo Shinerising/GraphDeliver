@@ -90,7 +90,7 @@ namespace GraphDeliver
                 if (_clientA.IsConnected)
                 {
                     _receiveCountA += 1;
-                    DataReceived(buffer, offset, count);
+                    DataReceived(buffer, offset + 11, count - 11);
                 }
             });
 
@@ -116,7 +116,7 @@ namespace GraphDeliver
                 if (_clientB.IsConnected)
                 {
                     _receiveCountB += 1;
-                    DataReceived(buffer, offset, count);
+                    DataReceived(buffer, offset + 11, count - 11);
                 }
             });
         }
@@ -144,7 +144,7 @@ namespace GraphDeliver
 
         private void DataReceived(byte[] buffer, int offset, int count)
         {
-            if (buffer == null || buffer.Length == 0 || count == 0 || count > buffer.Length || count < 2)
+            if (buffer == null || buffer.Length == 0 || count == 0 || count > buffer.Length || count < 18)
             {
                 return;
             }
