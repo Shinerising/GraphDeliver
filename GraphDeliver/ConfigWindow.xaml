@@ -47,10 +47,11 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Label Content="校验方式" Width="60"/>
-                <TextBox Text="{Binding Parity}" Width="66" MaxLength="6" Margin="0,2,12,2"/>
+                <TextBox Text="{Binding Parity}" Width="66" MaxLength="6" Margin="0,2,4,2"/>
                 <Label Content="发送间隔" Width="60"/>
                 <TextBox Text="{Binding SendInterval}" Width="66" MaxLength="6" Margin="0,2,4,2"/>
-                <Border Width="100"/>
+                <Label Content="超时计数" Width="60"/>
+                <TextBox Text="{Binding IdleCount}" Width="40" MaxLength="6" Margin="0,2,4,2"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Label Content="A机地址" Width="60"/>

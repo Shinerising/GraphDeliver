@@ -12,6 +12,7 @@ namespace GraphDeliver
         public static int StopBits => int.TryParse(ConfigurationManager.AppSettings["stopbits"], out int stop) ? stop : 1;
         public static string Parity => ConfigurationManager.AppSettings["parity"] ?? "NONE";
         public static int SendInterval => int.TryParse(ConfigurationManager.AppSettings["interval"], out int interval) ? interval : 1000;
+        public static int IdleCount => int.TryParse(ConfigurationManager.AppSettings["idlecount"], out int idlecount) ? idlecount : 5;
         public static bool IsAutoRun => ConfigurationManager.AppSettings["autorun"]?.ToUpper() == "TRUE";
         public static int WaitTime => int.TryParse(ConfigurationManager.AppSettings["waittime"], out int wait) ? wait : 10000;
         public static int RetryCount => int.TryParse(ConfigurationManager.AppSettings["retrycount"], out int retry) ? retry : 5;
