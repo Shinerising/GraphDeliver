@@ -41,8 +41,8 @@ namespace GraphDeliver
         public bool IsEnabledB => _isEnabledB;
         public bool IsConnectedA => _clientA != null && _clientA.IsConnected && _isConnectedA;
         public bool IsConnectedB => _clientB != null && _clientB.IsConnected && _isConnectedB;
-        public string NameA => _clientB != null ? $"{_ipAddressA}:{_portA}" : "未启用";
-        public string NameB => _clientB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
+        public string NameA => _clientB != null && _ipAddressA != null ? $"{_ipAddressA}:{_portA}" : "未启用";
+        public string NameB => _clientB != null && _ipAddressB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
         public bool IsConnected { get; set; }
 
         public SocketManager(IPAddress ipAddressA, IPAddress ipAddressB, int portA = 1000, int portB = 1000)
@@ -75,6 +75,7 @@ namespace GraphDeliver
                 {
                     IsConnected = true;
                     ClientConnected?.Invoke();
+                    SendGraphRequest(_clientA);
                 }
             });
 
@@ -82,7 +83,7 @@ namespace GraphDeliver
             {
                 _errorCountA++;
                 message = message ?? e?.Message ?? error.ToString();
-                ErrorOccured?.Invoke(message);
+                ErrorOccured?.Invoke("A机:" + message);
             });
 
             _clientA.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
@@ -90,7 +91,7 @@ namespace GraphDeliver
                 if (_clientA.IsConnected)
                 {
                     _receiveCountA += 1;
-                    DataReceived(buffer, offset, count);
+                    DataReceived(buffer, offset + 11, count - 15);
                 }
             });
 
@@ -101,6 +102,7 @@ namespace GraphDeliver
                 {
                     IsConnected = true;
                     ClientConnected?.Invoke();
+                    SendGraphRequest(_clientA);
                 }
             });
 
@@ -108,7 +110,7 @@ namespace GraphDeliver
             {
                 _errorCountB++;
                 message = message ?? e?.Message ?? error.ToString();
-                ErrorOccured?.Invoke(message);
+                ErrorOccured?.Invoke("B机:" + message);
             });
 
             _clientB.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
@@ -116,7 +118,7 @@ namespace GraphDeliver
                 if (_clientB.IsConnected)
                 {
                     _receiveCountB += 1;
-                    DataReceived(buffer, offset, count);
+                    DataReceived(buffer, offset + 11, count - 15);
                 }
             });
         }
@@ -133,7 +135,7 @@ namespace GraphDeliver
             {
                 _packageIndexSet.Add(index);
 
-                while (_packageIndexSet.Count > 200)
+                while (_packageIndexSet.Count > 500)
                 {
                     _packageIndexSet.Remove(_packageIndexSet.First());
                 }
@@ -142,9 +144,23 @@ namespace GraphDeliver
             }
         }
 
+        private void SendGraphRequest(SocketTCPClient client)
+        {
+            try
+            {
+                if (client == null || !client.IsConnected)
+                {
+                    return;
+                }
+                byte[] buffer = new byte[100];
+                _ = client.Send(buffer, 0, buffer.Length);
+            }
+            catch { }
+        }
+
         private void DataReceived(byte[] buffer, int offset, int count)
         {
-            if (buffer == null || buffer.Length == 0 || count == 0 || count > buffer.Length || count < 2)
+            if (buffer == null || buffer.Length == 0 || count > buffer.Length || count < 16)
             {
                 return;
             }

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GraphDeliver"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignData Type=local:Status}"
         Title="设备状态实时传输工具" Width="380" Height="480" MinWidth="280" MinHeight="360" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" Closing="Window_Closing" KeyDown="Window_KeyDown" Icon="/app.ico">
     <Control>
         <Control.Resources>
