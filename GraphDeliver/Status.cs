@@ -74,7 +74,7 @@ namespace GraphDeliver
 
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressA, out IPAddress ipAddressA, out int portA);
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressB, out IPAddress ipAddressB, out int portB);
-            _socketManager = new SocketManager(ipAddressA, ipAddressB, portA, portB);
+            _socketManager = new SocketManager(ipAddressA, ipAddressB, portA, portB, AppSettings.IdleCount);
 
             _dataManager = new DataManager();
 
@@ -96,6 +96,8 @@ namespace GraphDeliver
             _task.Start();
 
             ConfigList.Add($"发送间隔:{AppSettings.SendInterval}");
+            ConfigList.Add($"超时计数:{AppSettings.IdleCount}");
+            ConfigList.Add($"开机自启:{(AppSettings.IsAutoRun ? "是" : "否")}");
         }
 
         private void MonitoringProcedure()

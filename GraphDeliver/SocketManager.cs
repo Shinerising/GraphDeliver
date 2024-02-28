@@ -20,13 +20,14 @@ namespace GraphDeliver
         private readonly int _portA = 1000;
         private readonly IPAddress _ipAddressB;
         private readonly int _portB = 1000;
+        private readonly int _idleCount = 5;
 
         private int _receiveCountA = 0;
         private int _receiveCountB = 0;
         private int _errorCountA = 0;
         private int _errorCountB = 0;
-        private bool _isEnabledA = false;
-        private bool _isEnabledB = false;
+        private readonly bool _isEnabledA = false;
+        private readonly bool _isEnabledB = false;
         private bool _isConnectedA = false;
         private bool _isConnectedB = false;
 
@@ -41,11 +42,11 @@ namespace GraphDeliver
         public bool IsEnabledB => _isEnabledB;
         public bool IsConnectedA => _clientA != null && _clientA.IsConnected && _isConnectedA;
         public bool IsConnectedB => _clientB != null && _clientB.IsConnected && _isConnectedB;
-        public string NameA => _clientB != null ? $"{_ipAddressA}:{_portA}" : "未启用";
-        public string NameB => _clientB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
+        public string NameA => _clientB != null && _ipAddressA != null ? $"{_ipAddressA}:{_portA}" : "未启用";
+        public string NameB => _clientB != null && _ipAddressB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
         public bool IsConnected { get; set; }
 
-        public SocketManager(IPAddress ipAddressA, IPAddress ipAddressB, int portA = 1000, int portB = 1000)
+        public SocketManager(IPAddress ipAddressA, IPAddress ipAddressB, int portA = 1000, int portB = 1000, int idleCount = 5)
         {
             _clientA = new SocketTCPClient();
             _clientB = new SocketTCPClient();
@@ -58,6 +59,8 @@ namespace GraphDeliver
 
             _portA = portA;
             _portB = portB;
+
+            _idleCount = idleCount;
 
             SetClient();
 
@@ -75,6 +78,8 @@ namespace GraphDeliver
                 {
                     IsConnected = true;
                     ClientConnected?.Invoke();
+                    ErrorOccured?.Invoke("A机:" + "已连接");
+                    SendGraphRequest(_clientA);
                 }
             });
 
@@ -82,7 +87,7 @@ namespace GraphDeliver
             {
                 _errorCountA++;
                 message = message ?? e?.Message ?? error.ToString();
-                ErrorOccured?.Invoke(message);
+                ErrorOccured?.Invoke("A机:" + message);
             });
 
             _clientA.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
@@ -90,7 +95,7 @@ namespace GraphDeliver
                 if (_clientA.IsConnected)
                 {
                     _receiveCountA += 1;
-                    DataReceived(buffer, offset + 11, count - 11);
+                    DataReceived(buffer, offset + 11, count - 15);
                 }
             });
 
@@ -101,6 +106,8 @@ namespace GraphDeliver
                 {
                     IsConnected = true;
                     ClientConnected?.Invoke();
+                    ErrorOccured?.Invoke("B机:" + "已连接");
+                    SendGraphRequest(_clientB);
                 }
             });
 
@@ -108,7 +115,7 @@ namespace GraphDeliver
             {
                 _errorCountB++;
                 message = message ?? e?.Message ?? error.ToString();
-                ErrorOccured?.Invoke(message);
+                ErrorOccured?.Invoke("B机:" + message);
             });
 
             _clientB.SetReceiveHandler((EndPoint endPoint, byte[] buffer, int offset, int count) =>
@@ -116,7 +123,7 @@ namespace GraphDeliver
                 if (_clientB.IsConnected)
                 {
                     _receiveCountB += 1;
-                    DataReceived(buffer, offset + 11, count - 11);
+                    DataReceived(buffer, offset + 11, count - 15);
                 }
             });
         }
@@ -133,7 +140,7 @@ namespace GraphDeliver
             {
                 _packageIndexSet.Add(index);
 
-                while (_packageIndexSet.Count > 200)
+                while (_packageIndexSet.Count > 500)
                 {
                     _packageIndexSet.Remove(_packageIndexSet.First());
                 }
@@ -142,9 +149,23 @@ namespace GraphDeliver
             }
         }
 
+        private void SendGraphRequest(SocketTCPClient client)
+        {
+            try
+            {
+                if (client == null || !client.IsConnected)
+                {
+                    return;
+                }
+                byte[] buffer = new byte[100];
+                _ = client.Send(buffer, 0, buffer.Length);
+            }
+            catch { }
+        }
+
         private void DataReceived(byte[] buffer, int offset, int count)
         {
-            if (buffer == null || buffer.Length == 0 || count == 0 || count > buffer.Length || count < 18)
+            if (buffer == null || buffer.Length == 0 || count > buffer.Length || count < 16)
             {
                 return;
             }
@@ -260,9 +281,14 @@ namespace GraphDeliver
                         _errorCountA = 0;
                     }
 
-                    if (_errorCountA > 5)
+                    if (_errorCountA > _idleCount)
                     {
                         _errorCountA = 0;
+                        if (_isConnectedA)
+                        {
+                            _isConnectedA = false;
+                            ErrorOccured?.Invoke("A机:" + "数据接收超时");
+                        }
                         _isConnectedA = false;
                         _clientA.Restart(_ipAddressA, _portA);
 
@@ -286,10 +312,14 @@ namespace GraphDeliver
                         _errorCountB = 0;
                     }
 
-                    if (_errorCountB > 5)
+                    if (_errorCountB > _idleCount)
                     {
                         _errorCountB = 0;
-                        _isConnectedB = false;
+                        if(_isConnectedB)
+                        {
+                            _isConnectedB = false;
+                            ErrorOccured?.Invoke("B机:" + "数据接收超时");
+                        }
                         _clientB.Restart(_ipAddressB, _portB);
 
                         if (!_isConnectedA && IsConnected)

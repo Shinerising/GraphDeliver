@@ -1,20 +1,11 @@
 ﻿using Microsoft.Win32;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace GraphDeliver
 {
@@ -33,6 +24,7 @@ namespace GraphDeliver
         public int StopBits { get; set; } = 1;
         public string Parity { get; set; } = "NONE";
         public int SendInterval { get; set; } = 1000;
+        public int IdleCount { get; set; } = 5;
         public string HostAddressA { get; set; } = "127.0.0.1:1000";
         public string HostAddressB { get; set; } = "127.0.0.1:1001";
         public bool IsAutoRun { get; set; }
@@ -68,6 +60,7 @@ namespace GraphDeliver
                 StopBits = int.Parse(ConfigurationManager.AppSettings["stopbits"]);
                 Parity = ConfigurationManager.AppSettings["parity"].ToUpper();
                 SendInterval = int.Parse(ConfigurationManager.AppSettings["interval"]);
+                IdleCount = int.Parse(ConfigurationManager.AppSettings["idlecount"]);
                 HostAddressA = ConfigurationManager.AppSettings["host_a"];
                 HostAddressB = ConfigurationManager.AppSettings["host_b"];
 
@@ -97,6 +90,7 @@ namespace GraphDeliver
                 { "stopbits", StopBits },
                 { "parity", Parity },
                 { "interval", SendInterval },
+                { "idlecount", IdleCount },
                 { "host_a", HostAddressA },
                 { "host_b", HostAddressB },
                 { "autorun", IsAutoRun },

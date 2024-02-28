@@ -31,6 +31,8 @@ namespace GraphDeliver
             InitializeComponent();
 
             CheckAutoRun();
+
+            status.AddLog("系统提示", "程序已启动");
         }
 
         private void CheckAutoRun()
@@ -121,6 +123,8 @@ namespace GraphDeliver
                 e.Cancel = true;
                 return;
             }
+
+            status.AddLog("系统提示", "程序正在退出");
 
             status.Dispose();
         }
