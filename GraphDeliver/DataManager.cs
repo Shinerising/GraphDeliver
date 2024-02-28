@@ -22,68 +22,49 @@ namespace GraphDeliver
 
         public void ClearData()
         {
-            lock (_deviceStatusList)
-            {
-                _deviceStatusList.Clear();
-            }
-
-            lock (_boardStatusList)
-            {
-                _boardStatusList.Clear();
-            }
-
-            lock (_messageList)
-            { 
-                _messageList.Clear();
-            }
+            _deviceStatusList.Clear();
+            _boardStatusList.Clear();
+            _messageList.Clear();
 
             UpdateTime = DateTime.Now;
         }
 
         public void ApplyDeviceStatusData(int deviceID, byte[] data)
         {
-            lock (_deviceStatusList)
+            while (deviceID >= _deviceStatusList.Count)
             {
-                while (deviceID >= _deviceStatusList.Count)
-                {
-                    _deviceStatusList.Add(new byte[DeviceStatusSize]);
-                }
-
-                if (data.Length < DeviceStatusSize)
-                {
-                    return;
-                }
-
-                Buffer.BlockCopy(data, 0, _deviceStatusList[deviceID], 0, DeviceStatusSize);
+                _deviceStatusList.Add(new byte[DeviceStatusSize]);
             }
+
+            if (data.Length < DeviceStatusSize)
+            {
+                return;
+            }
+
+            Buffer.BlockCopy(data, 0, _deviceStatusList[deviceID], 0, DeviceStatusSize);
 
             UpdateTime = DateTime.Now;
         }
 
         public byte[] GetAllDeviceData()
         {
-            lock (_deviceStatusList)
+            int count = _deviceStatusList.Count;
+            byte[] data = new byte[DeviceStatusSize * count];
+            for (int i = 0; i < count; i++)
             {
-                byte[] data = new byte[DeviceStatusSize * _deviceStatusList.Count];
-                for (int i = 0; i < _deviceStatusList.Count; i++)
-                {
-                    Buffer.BlockCopy(_deviceStatusList[i], 0, data, i * DeviceStatusSize, DeviceStatusSize);
-                }
-
-                return data;
+                Buffer.BlockCopy(_deviceStatusList[i], 0, data, i * DeviceStatusSize, DeviceStatusSize);
             }
+
+            return data;
         }
 
         public void PushMessage(string message)
         {
-            lock (_messageList)
+            if (_messageList.Count > 100)
             {
-                if (_messageList.Count > 100)
-                {
-                    return;
-                }
-                _messageList.Add(message);
+                return;
             }
+            _messageList.Add(message);
 
             UpdateTime = DateTime.Now;
         }
@@ -103,7 +84,7 @@ namespace GraphDeliver
 
             _messageList.Clear();
 
-            return Encoding.ASCII.GetBytes(stringBuilder.ToString());
+            return Encoding.UTF8.GetBytes(stringBuilder.ToString());
         }
 
         public void ApplyBoardStatusData(int hostID, byte[] data)
@@ -127,34 +108,29 @@ namespace GraphDeliver
                 return;
             }
 
-            lock (_boardStatusList)
+            if (data.Length < 106)
             {
-                if (data.Length < 106)
-                {
-                    return;
-                }
-                Buffer.BlockCopy(data, offset + 50, _boardStatusList[online], 0, 3);
-                Buffer.BlockCopy(data, offset + 103, _boardStatusList[backup], 0, 3);
-                new BitArray(data.Skip(offset).Take(50).Select(bit => bit == 0x01).ToArray()).CopyTo(_boardStatusList[online], 3);
-                new BitArray(data.Skip(offset + 53).Take(50).Select(bit => bit == 0x01).ToArray()).CopyTo(_boardStatusList[backup], 3);
+                return;
             }
+
+            Buffer.BlockCopy(data, offset + 50, _boardStatusList[online], 0, 3);
+            Buffer.BlockCopy(data, offset + 103, _boardStatusList[backup], 0, 3);
+            new BitArray(data.Skip(offset).Take(50).Select(bit => bit == 0x01).ToArray()).CopyTo(_boardStatusList[online], 3);
+            new BitArray(data.Skip(offset + 53).Take(50).Select(bit => bit == 0x01).ToArray()).CopyTo(_boardStatusList[backup], 3);
 
             UpdateTime = DateTime.Now;
         }
 
         public byte[] GetAllBoardData()
         {
-            lock (_boardStatusList)
+            byte[] data = new byte[BoardStatusSize * _boardStatusList.Count + 1];
+            data[0] = _hostOnline;
+            for (int i = 0; i < _boardStatusList.Count; i++)
             {
-                byte[] data = new byte[BoardStatusSize * _boardStatusList.Count + 1];
-                data[0] = _hostOnline;
-                for (int i = 0; i < _boardStatusList.Count; i++)
-                {
-                    Buffer.BlockCopy(_boardStatusList[i], 0, data, i * BoardStatusSize + 1, BoardStatusSize);
-                }
-
-                return data;
+                Buffer.BlockCopy(_boardStatusList[i], 0, data, i * BoardStatusSize + 1, BoardStatusSize);
             }
+
+            return data;
         }
 
         private byte[] CompressByteArray(byte[] data)
@@ -191,7 +167,9 @@ namespace GraphDeliver
             byte[] compressedData = CompressByteArray(data);
 
             ushort length = (ushort)(compressedData.Length + 2);
+            uint timestamp = (uint)(UpdateTime - new DateTime(1970, 1, 1)).TotalSeconds;
             byte[] packedData = new byte[length + 7];
+            BitConverter.GetBytes(timestamp).CopyTo(packedData, 0);
             packedData[4] = 0x04;
             Buffer.BlockCopy(BitConverter.GetBytes(length), 0, packedData, 5, 2);
             packedData[7] = 0x78;

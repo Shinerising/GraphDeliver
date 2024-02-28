@@ -97,6 +97,7 @@ namespace GraphDeliver
                 {
                     _receiveCountA += 1;
                     DataReceived(buffer, offset + _offsetHead, count - _offsetHead - _offsetTail);
+                    SendDataResponse(_clientA, buffer[_offsetHead - 2]);
                 }
             });
 
@@ -124,6 +125,7 @@ namespace GraphDeliver
                 {
                     _receiveCountB += 1;
                     DataReceived(buffer, offset + _offsetHead, count - _offsetHead - _offsetTail);
+                    SendDataResponse(_clientB, buffer[_offsetHead - 2]);
                 }
             });
         }
@@ -147,6 +149,31 @@ namespace GraphDeliver
 
                 return false;
             }
+        }
+
+        private byte[] _answerData;
+        private void SendDataResponse(SocketTCPClient client, byte id)
+        {
+            try
+            {
+                string head = "CLMQHEAD";
+                string tail = "CLMQTAIL";
+                if (_answerData == null)
+                {
+                    byte[] buffer = new byte[10];
+                    byte[] packData = new byte[buffer.Length + head.Length + tail.Length + 2];
+                    Encoding.ASCII.GetBytes(head).CopyTo(packData, 0);
+                    packData[head.Length] = 0x04;
+                    packData[head.Length + 1] = 0x00;
+                    buffer.CopyTo(packData, head.Length + 2);
+                    Encoding.ASCII.GetBytes(tail).CopyTo(packData, head.Length + buffer.Length + 2);
+                    _answerData = packData;
+                }
+                _answerData[head.Length + 1] = id;
+
+                _ = client.Send(_answerData, 0, _answerData.Length);
+            }
+            catch { }
         }
 
         private void SendGraphRequest(SocketTCPClient client)
@@ -244,6 +271,7 @@ namespace GraphDeliver
                         bool isCritical = false;
                         switch (data[12])
                         {
+                            case 0:
                             case 9:
                             case 11:
                             case 12:
@@ -264,7 +292,7 @@ namespace GraphDeliver
                             default:
                                 break;
                         }
-                        string message = Encoding.ASCII.GetString(data, 16, dataLength) + (isCritical ? "$" : "");
+                        string message = Encoding.Default.GetString(data, 16, dataLength) + (isCritical ? "$" : "");
                         MessageReceived?.Invoke(message);
                     }
                     break;
