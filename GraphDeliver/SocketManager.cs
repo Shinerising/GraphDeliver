@@ -11,6 +11,8 @@ namespace GraphDeliver
 {
     internal class SocketManager
     {
+        private const int _offsetHead = 11;
+        private const int _offsetTail = 0;
         private readonly SocketTCPClient _clientA;
         private readonly SocketTCPClient _clientB;
         private readonly CancellationTokenSource _cancellation;
@@ -78,7 +80,6 @@ namespace GraphDeliver
                 {
                     IsConnected = true;
                     ClientConnected?.Invoke();
-                    ErrorOccured?.Invoke("A机:" + "已连接");
                     SendGraphRequest(_clientA);
                 }
             });
@@ -95,7 +96,7 @@ namespace GraphDeliver
                 if (_clientA.IsConnected)
                 {
                     _receiveCountA += 1;
-                    DataReceived(buffer, offset + 11, count - 15);
+                    DataReceived(buffer, offset + _offsetHead, count - _offsetHead - _offsetTail);
                 }
             });
 
@@ -106,7 +107,6 @@ namespace GraphDeliver
                 {
                     IsConnected = true;
                     ClientConnected?.Invoke();
-                    ErrorOccured?.Invoke("B机:" + "已连接");
                     SendGraphRequest(_clientB);
                 }
             });
@@ -123,7 +123,7 @@ namespace GraphDeliver
                 if (_clientB.IsConnected)
                 {
                     _receiveCountB += 1;
-                    DataReceived(buffer, offset + 11, count - 15);
+                    DataReceived(buffer, offset + _offsetHead, count - _offsetHead - _offsetTail);
                 }
             });
         }
@@ -157,8 +157,29 @@ namespace GraphDeliver
                 {
                     return;
                 }
-                byte[] buffer = new byte[100];
-                _ = client.Send(buffer, 0, buffer.Length);
+                byte[] buffer = new byte[18];
+                string command = "RF";
+                ushort stationId = 0x0001;
+                ushort commandId = 0x0002;
+                ushort deviceId = 0x0000;
+                ushort length = 10;
+                BitConverter.GetBytes((uint)length).CopyTo(buffer, 4);
+                BitConverter.GetBytes(stationId).CopyTo(buffer, 8);
+                BitConverter.GetBytes(commandId).CopyTo(buffer, 8 + 2);
+                BitConverter.GetBytes(deviceId).CopyTo(buffer, 8 + 4);
+                BitConverter.GetBytes(length).CopyTo(buffer, 8 + 6);
+                Encoding.ASCII.GetBytes(command).CopyTo(buffer, 8 + 8);
+
+                string head = "CLMQHEAD";
+                string tail = "CLMQTAIL";
+                byte[] packData = new byte[buffer.Length + head.Length + tail.Length + 2];
+                Encoding.ASCII.GetBytes(head).CopyTo(packData, 0);
+                packData[head.Length] = 0x03;
+                packData[head.Length + 1] = 0x00;
+                buffer.CopyTo(packData, head.Length + 2);
+                Encoding.ASCII.GetBytes(tail).CopyTo(packData, head.Length + buffer.Length + 2);
+
+                _ = client.Send(packData, 0, packData.Length);
             }
             catch { }
         }

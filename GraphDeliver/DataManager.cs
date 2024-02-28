@@ -15,7 +15,7 @@ namespace GraphDeliver
 
         private byte _hostOnline = 0x74;
         private readonly List<byte[]> _deviceStatusList = new List<byte[]>();
-        private readonly List<byte[]> _boardStatusList = new List<byte[]>(2) { new byte[BoardStatusSize] };
+        private readonly List<byte[]> _boardStatusList = new List<byte[]>(2) { new byte[BoardStatusSize], new byte[BoardStatusSize] };
         private readonly List<string> _messageList = new List<string>();
 
         public DateTime UpdateTime { get; set; }

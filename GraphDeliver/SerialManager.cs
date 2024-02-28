@@ -145,6 +145,11 @@ namespace GraphDeliver
                 return;
             }
 
+            if (!Status_Open)
+            {
+                return;
+            }
+
             bool result = _serialClient.Send(data);
 
             if (result)

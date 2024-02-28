@@ -4,8 +4,8 @@ namespace GraphDeliver
 {
     public static class AppSettings
     {
-        public static string HostAddressA => ConfigurationManager.AppSettings["host_a"] ?? "172.16.34.75:1000";
-        public static string HostAddressB => ConfigurationManager.AppSettings["host_b"] ?? "172.16.34.76:1001";
+        public static string HostAddressA => ConfigurationManager.AppSettings["host_a"] ?? "172.16.34.74:1000";
+        public static string HostAddressB => ConfigurationManager.AppSettings["host_b"] ?? "172.16.34.75:1000";
         public static string ComPort => $"COM{ConfigurationManager.AppSettings["comport"] ?? "1"}";
         public static int BaudRate => int.TryParse(ConfigurationManager.AppSettings["baudrate"], out int baud) ? baud : 9600;
         public static int DataBits => int.TryParse(ConfigurationManager.AppSettings["databits"], out int data) ? data : 8;
