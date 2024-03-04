@@ -268,31 +268,8 @@ namespace GraphDeliver
                         {
                             break;
                         }
-                        bool isCritical = false;
-                        switch (data[12])
-                        {
-                            case 0:
-                            case 9:
-                            case 11:
-                            case 12:
-                            case 14:
-                            case 15:
-                            case 21:
-                            case 29:
-                            case 30:
-                            case 34:
-                            case 40:
-                            case 41:
-                            case 42:
-                            case 43:
-                            case 55:
-                            case 83:
-                                isCritical = true;
-                                break;
-                            default:
-                                break;
-                        }
-                        string message = Encoding.Default.GetString(data, 16, dataLength) + (isCritical ? "$" : "");
+                        byte messageType = data[12];
+                        string message = Encoding.Default.GetString(data, 16, dataLength) + (char)messageType;
                         MessageReceived?.Invoke(message);
                     }
                     break;
