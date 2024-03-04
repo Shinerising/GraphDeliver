@@ -161,7 +161,10 @@ namespace GraphDeliver
 
         public byte[] GetAllRollingData()
         {
-            return Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, _rollingDataList));
+            byte[] data = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, _rollingDataList));
+            _rollingDataList[0] = "";
+            _rollingDataList[1] = "";
+            return data;
         }
 
         private byte[] CompressByteArray(byte[] data)
