@@ -153,7 +153,7 @@ namespace GraphDeliver
                 string state = buffer[offset] == 0xc0 ? "正在溜放" : buffer[offset] == 0xc8 ? "等待溜放" : "溜放结束";
                 byte cutCount = buffer[offset + 3];
                 string trainName = Encoding.Default.GetString(buffer, offset + 26, 13).Trim();
-                string message = $"车次:{trainName} ${state}，勾序:${cutCount}";
+                string message = $"车次:{trainName} {state}，勾序:{cutCount}";
                 _rollingDataList[i] = message;
                 _rollingRawDataList[i] = data;
             }
