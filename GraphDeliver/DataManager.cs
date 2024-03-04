@@ -143,7 +143,9 @@ namespace GraphDeliver
                 {
                     continue;
                 }
-                if (buffer.Skip(i * 62).Take(62).SequenceEqual(_rollingRawDataList[i]))
+                byte[] data = new byte[62];
+                Buffer.BlockCopy(buffer, i * 62, data, 0, 62);
+                if (data.SequenceEqual(_rollingRawDataList[i]))
                 {
                     continue;
                 }
@@ -153,7 +155,7 @@ namespace GraphDeliver
                 string trainName = Encoding.Default.GetString(buffer, offset + 26, 13).Trim();
                 string message = $"车次:{trainName} ${state}，勾序:${cutCount}";
                 _rollingDataList[i] = message;
-                _rollingRawDataList[i] = buffer.Skip(i * 62).Take(62).ToArray();
+                _rollingRawDataList[i] = data;
             }
         }
 
