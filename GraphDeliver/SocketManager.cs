@@ -39,6 +39,7 @@ namespace GraphDeliver
         public event Action<int, byte[]> DeviceStatusReceived;
         public event Action<string> MessageReceived;
         public event Action<int, byte[]> BoardStatusReceived;
+        public event Action<byte[]> RollingDataReceived;
 
         public bool IsEnabledA => _isEnabledA;
         public bool IsEnabledB => _isEnabledB;
@@ -271,6 +272,17 @@ namespace GraphDeliver
                         byte messageType = data[12];
                         string message = Encoding.Default.GetString(data, 16, dataLength) + (char)messageType;
                         MessageReceived?.Invoke(message);
+                    }
+                    break;
+                case 0x0005:
+                    {
+                        if (count < 62 * 2 + 20)
+                        {
+                            break;
+                        }
+                        byte[] status = new byte[62 * 2];
+                        Buffer.BlockCopy(data, 20, status, 0, 62 * 2);
+                        RollingDataReceived?.Invoke(status);
                     }
                     break;
                 default:

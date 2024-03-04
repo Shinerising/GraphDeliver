@@ -17,6 +17,8 @@ namespace GraphDeliver
         private readonly List<byte[]> _deviceStatusList = new List<byte[]>();
         private readonly List<byte[]> _boardStatusList = new List<byte[]>(2) { new byte[BoardStatusSize], new byte[BoardStatusSize] };
         private readonly List<string> _messageList = new List<string>();
+        private readonly List<string> _rollingDataList = new List<string>(2) { "", "" };
+        private readonly List<byte[]> _rollingRawDataList = new List<byte[]>(2) { new byte[62], new byte[62] };
 
         public DateTime UpdateTime { get; set; }
 
@@ -133,6 +135,33 @@ namespace GraphDeliver
             return data;
         }
 
+        public void ApplyRollingData(byte[] buffer)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                if (buffer.Length < i * 62 + 62)
+                {
+                    continue;
+                }
+                if (buffer.Skip(i * 62).Take(62).SequenceEqual(_rollingRawDataList[i]))
+                {
+                    continue;
+                }
+                int offset = i * 62;
+                string state = buffer[offset] == 0xc0 ? "正在溜放" : buffer[offset] == 0xc8 ? "等待溜放" : "溜放结束";
+                byte cutCount = buffer[offset + 3];
+                string trainName = Encoding.Default.GetString(buffer, offset + 26, 13).Trim();
+                string message = $"车次:{trainName} ${state}，勾序:${cutCount}";
+                _rollingDataList[i] = message;
+                _rollingRawDataList[i] = buffer.Skip(i * 62).Take(62).ToArray();
+            }
+        }
+
+        public byte[] GetAllRollingData()
+        {
+            return Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, _rollingDataList));
+        }
+
         private byte[] CompressByteArray(byte[] data)
         {
             using (var inStream = new MemoryStream(data))
@@ -154,8 +183,9 @@ namespace GraphDeliver
             byte[] deviceData = GetAllDeviceData();
             byte[] boardData = GetAllBoardData();
             byte[] messageData = PopAllMessageData();
+            byte[] rollingData = GetAllRollingData();
 
-            byte[] data = new byte[deviceData.Length + boardData.Length + messageData.Length + 6];
+            byte[] data = new byte[deviceData.Length + boardData.Length + messageData.Length + rollingData.Length + 8];
 
             Buffer.BlockCopy(BitConverter.GetBytes((ushort)deviceData.Length), 0, data, 0, 2);
             Buffer.BlockCopy(deviceData, 0, data, 2, deviceData.Length);
@@ -163,6 +193,8 @@ namespace GraphDeliver
             Buffer.BlockCopy(boardData, 0, data, deviceData.Length + 4, boardData.Length);
             Buffer.BlockCopy(BitConverter.GetBytes((ushort)messageData.Length), 0, data, deviceData.Length + boardData.Length + 4, 2);
             Buffer.BlockCopy(messageData, 0, data, deviceData.Length + boardData.Length + 6, messageData.Length);
+            Buffer.BlockCopy(BitConverter.GetBytes((ushort)rollingData.Length), 0, data, deviceData.Length + boardData.Length + messageData.Length + 6, 2);
+            Buffer.BlockCopy(rollingData, 0, data, deviceData.Length + boardData.Length + messageData.Length + 8, rollingData.Length);
 
             byte[] compressedData = CompressByteArray(data);
 

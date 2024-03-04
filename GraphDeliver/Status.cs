@@ -90,6 +90,7 @@ namespace GraphDeliver
             _socketManager.DeviceStatusReceived += SocketManager_DeviceStatusReceived;
             _socketManager.BoardStatusReceived += SocketManager_BoardStatusReceived;
             _socketManager.MessageReceived += SocketManager_MessageReceived;
+            _socketManager.RollingDataReceived += SocketManager_RollingDataReceived;
 
             _cancellation = new CancellationTokenSource();
             _task = new Task(MonitoringProcedure, _cancellation.Token);
@@ -99,7 +100,6 @@ namespace GraphDeliver
             ConfigList.Add($"超时计数:{AppSettings.IdleCount}");
             ConfigList.Add($"开机自启:{(AppSettings.IsAutoRun ? "是" : "否")}");
         }
-
         private void MonitoringProcedure()
         {
             while (!_cancellation.Token.IsCancellationRequested)
@@ -180,6 +180,10 @@ namespace GraphDeliver
         private void SocketManager_MessageReceived(string message)
         {
             _dataManager.PushMessage(message);
+        }
+        private void SocketManager_RollingDataReceived(byte[] buffer)
+        {
+            _dataManager.ApplyRollingData(buffer);
         }
 
         public bool OpenPort()
