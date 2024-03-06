@@ -172,7 +172,7 @@ namespace GraphDeliver
                 }
                 _answerData[head.Length + 1] = id;
 
-                _ = client.Send(_answerData, 0, _answerData.Length);
+                _ = client.SendSync(_answerData);
             }
             catch { }
         }
@@ -207,7 +207,7 @@ namespace GraphDeliver
                 buffer.CopyTo(packData, head.Length + 2);
                 Encoding.ASCII.GetBytes(tail).CopyTo(packData, head.Length + buffer.Length + 2);
 
-                _ = client.Send(packData, 0, packData.Length);
+                _ = client.SendSync(packData);
             }
             catch { }
         }

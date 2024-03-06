@@ -1712,6 +1712,42 @@ namespace GraphDeliver
             return result;
         }
         /// <summary>
+        /// 向目标服务端发送数据(同步)
+        /// </summary>
+        /// <param name="endpoint">远端地址</param>
+        /// <param name="buffer">数据字节</param>
+        /// <returns>是否发送成功</returns>
+        public bool SendSync(byte[] buffer)
+        {
+            if (buffer == null)
+            {
+                return false;
+            }
+            if (!socket.Connected)
+            {
+                ErrorHandler?.Invoke(this, null, SocketError.NotConnected, null);
+
+                socket.Dispose();
+                if (ConnectEventArgs.RemoteEndPoint is IPEndPoint point)
+                {
+                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, Type);
+                    Start(point.Address, point.Port);
+                }
+
+                return false;
+            }
+            try
+            {
+                socket.Send(buffer);
+                return true;
+            }
+            catch (Exception e)
+            {
+                ErrorHandler?.Invoke(this, e, 0, null);
+                return false;
+            }
+        }
+        /// <summary>
         /// 向目标服务端发送数据
         /// </summary>
         /// <param name="endpoint">远端地址</param>
