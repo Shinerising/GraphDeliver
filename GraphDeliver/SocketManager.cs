@@ -11,8 +11,14 @@ namespace GraphDeliver
 {
     internal class SocketManager
     {
+
+        private const string _head = "CLMQHEAD";
+        private const string _tail = "CLMQTAIL";
         private const int _offsetHead = 11;
         private const int _offsetTail = 0;
+        private string _cacheA = string.Empty;
+        private string _cacheB = string.Empty;
+        private readonly bool _stickyControl = true;
         private readonly SocketTCPClient _clientA;
         private readonly SocketTCPClient _clientB;
         private readonly CancellationTokenSource _cancellation;
@@ -97,7 +103,7 @@ namespace GraphDeliver
                 if (_clientA.IsConnected)
                 {
                     _receiveCountA += 1;
-                    DataReceived(buffer, offset + _offsetHead, count - _offsetHead - _offsetTail);
+                    PushData(buffer, offset, count, ref _cacheA);
                     SendDataResponse(_clientA, buffer[_offsetHead - 2]);
                 }
             });
@@ -125,7 +131,7 @@ namespace GraphDeliver
                 if (_clientB.IsConnected)
                 {
                     _receiveCountB += 1;
-                    DataReceived(buffer, offset + _offsetHead, count - _offsetHead - _offsetTail);
+                    PushData(buffer, offset, count, ref _cacheB);
                     SendDataResponse(_clientB, buffer[_offsetHead - 2]);
                 }
             });
@@ -157,20 +163,18 @@ namespace GraphDeliver
         {
             try
             {
-                string head = "CLMQHEAD";
-                string tail = "CLMQTAIL";
                 if (_answerData == null)
                 {
                     byte[] buffer = new byte[10];
-                    byte[] packData = new byte[buffer.Length + head.Length + tail.Length + 2];
-                    Encoding.ASCII.GetBytes(head).CopyTo(packData, 0);
-                    packData[head.Length] = 0x04;
-                    packData[head.Length + 1] = 0x00;
-                    buffer.CopyTo(packData, head.Length + 2);
-                    Encoding.ASCII.GetBytes(tail).CopyTo(packData, head.Length + buffer.Length + 2);
+                    byte[] packData = new byte[buffer.Length + _head.Length + _tail.Length + 2];
+                    Encoding.ASCII.GetBytes(_head).CopyTo(packData, 0);
+                    packData[_head.Length] = 0x04;
+                    packData[_head.Length + 1] = 0x00;
+                    buffer.CopyTo(packData, _head.Length + 2);
+                    Encoding.ASCII.GetBytes(_tail).CopyTo(packData, _head.Length + buffer.Length + 2);
                     _answerData = packData;
                 }
-                _answerData[head.Length + 1] = id;
+                _answerData[_head.Length + 1] = id;
 
                 _ = client.SendSync(_answerData);
             }
@@ -198,18 +202,43 @@ namespace GraphDeliver
                 BitConverter.GetBytes(length).CopyTo(buffer, 8 + 6);
                 Encoding.ASCII.GetBytes(command).CopyTo(buffer, 8 + 8);
 
-                string head = "CLMQHEAD";
-                string tail = "CLMQTAIL";
-                byte[] packData = new byte[buffer.Length + head.Length + tail.Length + 2];
-                Encoding.ASCII.GetBytes(head).CopyTo(packData, 0);
-                packData[head.Length] = 0x03;
-                packData[head.Length + 1] = 0x00;
-                buffer.CopyTo(packData, head.Length + 2);
-                Encoding.ASCII.GetBytes(tail).CopyTo(packData, head.Length + buffer.Length + 2);
+                byte[] packData = new byte[buffer.Length + _head.Length + _tail.Length + 2];
+                Encoding.ASCII.GetBytes(_head).CopyTo(packData, 0);
+                packData[_head.Length] = 0x03;
+                packData[_head.Length + 1] = 0x00;
+                buffer.CopyTo(packData, _head.Length + 2);
+                Encoding.ASCII.GetBytes(_tail).CopyTo(packData, _head.Length + buffer.Length + 2);
 
                 _ = client.SendSync(packData);
             }
             catch { }
+        }
+
+        private void PushData(byte[] buffer, int offset, int count, ref string cache)
+        {
+            if (!_stickyControl)
+            {
+                DataReceived(buffer, offset + _offsetHead, count - _offsetHead - _offsetTail);
+                return;
+            }
+
+            cache += Encoding.ASCII.GetString(buffer, offset, count);
+
+            int head = cache.IndexOf(_head);
+            int tail = cache.IndexOf(_tail);
+            if (head >= 0 && tail >= 0)
+            {
+                int length = tail - head + _tail.Length;
+                byte[] data = new byte[length];
+                Encoding.ASCII.GetBytes(cache.Substring(head, length)).CopyTo(data, 0);
+                DataReceived(data, 0 + _offsetHead, length - _offsetHead - _offsetTail);
+                cache.Remove(head, length);
+            }
+
+            if (cache.Length >= 102400)
+            {
+                cache = string.Empty;
+            }
         }
 
         private void DataReceived(byte[] buffer, int offset, int count)
