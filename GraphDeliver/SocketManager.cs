@@ -227,9 +227,9 @@ namespace GraphDeliver
             bool hasValidData = true;
             while (hasValidData)
             {
-                int head = cache.IndexOf(_head);
-                int tail = cache.IndexOf(_tail);
-                if (head >= 0 && tail >= 0)
+                int head = cache.IndexOf(_head, 0);
+                int tail = cache.IndexOf(_tail, 0);
+                if (head >= 0 && tail >= head)
                 {
                     int length = tail - head + _tail.Length;
                     byte[] data = new byte[length];
