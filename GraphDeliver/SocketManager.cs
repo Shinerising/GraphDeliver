@@ -224,15 +224,23 @@ namespace GraphDeliver
 
             cache += Encoding.ASCII.GetString(buffer, offset, count);
 
-            int head = cache.IndexOf(_head);
-            int tail = cache.IndexOf(_tail);
-            if (head >= 0 && tail >= 0)
+            bool hasValidData = true;
+            while (hasValidData)
             {
-                int length = tail - head + _tail.Length;
-                byte[] data = new byte[length];
-                Encoding.ASCII.GetBytes(cache.Substring(head, length)).CopyTo(data, 0);
-                DataReceived(data, 0 + _offsetHead, length - _offsetHead - _offsetTail);
-                cache.Remove(head, length);
+                int head = cache.IndexOf(_head);
+                int tail = cache.IndexOf(_tail);
+                if (head >= 0 && tail >= 0)
+                {
+                    int length = tail - head + _tail.Length;
+                    byte[] data = new byte[length];
+                    Encoding.ASCII.GetBytes(cache.Substring(head, length)).CopyTo(data, 0);
+                    DataReceived(data, 0 + _offsetHead, length - _offsetHead - _offsetTail);
+                    cache = cache.Remove(head, length);
+                }
+                else
+                {
+                    hasValidData = false;
+                }
             }
 
             if (cache.Length >= 102400)
