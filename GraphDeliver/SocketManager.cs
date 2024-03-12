@@ -15,9 +15,7 @@ namespace GraphDeliver
         private const string _head = "CLMQHEAD";
         private const string _tail = "CLMQTAIL";
         private const int _offsetHead = 11;
-        private const int _offsetTail = 0;
-        private string _cacheA = string.Empty;
-        private string _cacheB = string.Empty;
+        private const int _offsetTail = 8;
         private readonly bool _stickyControl = true;
         private readonly SocketTCPClient _clientA;
         private readonly SocketTCPClient _clientB;
@@ -103,7 +101,7 @@ namespace GraphDeliver
                 if (_clientA.IsConnected)
                 {
                     _receiveCountA += 1;
-                    PushData(buffer, offset, count, ref _cacheA);
+                    PushData(buffer, offset, count);
                     SendDataResponse(_clientA, buffer[_offsetHead - 2]);
                 }
             });
@@ -131,7 +129,7 @@ namespace GraphDeliver
                 if (_clientB.IsConnected)
                 {
                     _receiveCountB += 1;
-                    PushData(buffer, offset, count, ref _cacheB);
+                    PushData(buffer, offset, count);
                     SendDataResponse(_clientB, buffer[_offsetHead - 2]);
                 }
             });
@@ -214,7 +212,7 @@ namespace GraphDeliver
             catch { }
         }
 
-        private void PushData(byte[] buffer, int offset, int count, ref string cache)
+        private void PushData(byte[] buffer, int offset, int count)
         {
             if (!_stickyControl)
             {
@@ -222,31 +220,48 @@ namespace GraphDeliver
                 return;
             }
 
-            cache += Encoding.ASCII.GetString(buffer, offset, count);
-
-            bool hasValidData = true;
-            while (hasValidData)
+            while (true)
             {
-                int head = cache.IndexOf(_head, 0);
-                int tail = cache.IndexOf(_tail, 0);
-                if (head >= 0 && tail >= head)
+                int head = FindInBuffer(_head, buffer, offset);
+                int tail = FindInBuffer(_tail, buffer, offset);
+                if (head >= 0 && tail >= head && count >= tail)
                 {
                     int length = tail - head + _tail.Length;
                     byte[] data = new byte[length];
-                    Encoding.ASCII.GetBytes(cache.Substring(head, length)).CopyTo(data, 0);
+                    Buffer.BlockCopy(buffer, head, data, 0, length);
                     DataReceived(data, 0 + _offsetHead, length - _offsetHead - _offsetTail);
-                    cache = cache.Remove(head, length);
+                    offset = tail + _tail.Length;
                 }
                 else
                 {
-                    hasValidData = false;
+                    break;
                 }
             }
-
-            if (cache.Length >= 102400)
+        }
+        private int FindInBuffer(string target, byte[] buffer, int offset)
+        {
+            int index = -1;
+            for (int i = offset; i < buffer.Length; i++)
             {
-                cache = string.Empty;
+                if (buffer[i] == target[0])
+                {
+                    bool flag = true;
+                    for (int j = 1; j < target.Length; j++)
+                    {
+                        if (buffer[i + j] != target[j])
+                        {
+                            flag = false;
+                            break;
+                        }
+                    }
+                    if (flag)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
             }
+            return index;
         }
 
         private void DataReceived(byte[] buffer, int offset, int count)
@@ -263,7 +278,7 @@ namespace GraphDeliver
             int length = BitConverter.ToInt32(data, 4);
             ushort type = BitConverter.ToUInt16(data, 10);
             int deviceId = BitConverter.ToUInt16(data, 12);
-            int dataLength = BitConverter.ToUInt16(data, 14);
+            int dataLength = BitConverter.ToUInt16(data, 14) - 8;
 
             if (length <= 0)
             {
