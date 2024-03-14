@@ -25,9 +25,18 @@ namespace GraphDeliver
         public void ClearData()
         {
             _hostOnline = 0x74;
-            _deviceStatusList.Clear();
-            _messageList.Clear();
-            _rollingDataList.Clear();
+            lock (_deviceStatusList)
+            {
+                _deviceStatusList.Clear();
+            }
+            lock (_messageList)
+            {
+                _messageList.Clear();
+            }
+            lock (_rollingDataList)
+            {
+                _rollingDataList.Clear();
+            }
             _boardStatusList[0] = new byte[BoardStatusSize];
             _boardStatusList[1] = new byte[BoardStatusSize];
             _rollingRawDataList[0] = new byte[62];
@@ -40,7 +49,10 @@ namespace GraphDeliver
         {
             while (deviceID >= _deviceStatusList.Count)
             {
-                _deviceStatusList.Add(new byte[DeviceStatusSize]);
+                lock (_deviceStatusList)
+                {
+                    _deviceStatusList.Add(new byte[DeviceStatusSize]);
+                }
             }
 
             if (data.Length < DeviceStatusSize)
@@ -71,11 +83,14 @@ namespace GraphDeliver
             {
                 return;
             }
-            if (_messageList.Last() == message)
+            if (_messageList.Count > 1 && _messageList.Last() == message)
             {
                 return;
             }
-            _messageList.Add(message);
+            lock (_messageList)
+            {
+                _messageList.Add(message);
+            }
 
             UpdateTime = DateTime.Now;
         }
@@ -88,12 +103,15 @@ namespace GraphDeliver
             }
 
             StringBuilder stringBuilder = new StringBuilder();
-            foreach (string message in _messageList)
+            lock (_messageList)
             {
-                stringBuilder.AppendLine(message);
-            }
+                foreach (string message in _messageList)
+                {
+                    stringBuilder.AppendLine(message);
+                }
 
-            _messageList.Clear();
+                _messageList.Clear();
+            }
 
             return Encoding.UTF8.GetBytes(stringBuilder.ToString());
         }
@@ -167,16 +185,35 @@ namespace GraphDeliver
                     continue;
                 }
                 string message = $"{state} 车次:{trainName} 序号:{cutCount}";
-                _rollingDataList.Add(message);
+                lock (_rollingDataList)
+                {
+                    _rollingDataList.Add(message);
+                }
                 _rollingRawDataList[i] = data;
             }
+
+            UpdateTime = DateTime.Now;
         }
 
         public byte[] GetAllRollingData()
         {
-            byte[] data = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, _rollingDataList));
-            _rollingDataList.Clear();
-            return data;
+            if (_rollingDataList.Count == 0)
+            {
+                return new byte[0];
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            lock (_rollingDataList)
+            {
+                foreach (string message in _rollingDataList)
+                {
+                    stringBuilder.AppendLine(message);
+                }
+
+                _rollingDataList.Clear();
+            }
+
+            return Encoding.UTF8.GetBytes(stringBuilder.ToString());
         }
 
         private byte[] CompressByteArray(byte[] data)
