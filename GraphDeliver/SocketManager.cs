@@ -294,7 +294,7 @@ namespace GraphDeliver
             {
                 case 0x0001:
                     {
-                        if (count < 16)
+                        if (count < 16 + dataLength)
                         {
                             break;
                         }
@@ -305,7 +305,7 @@ namespace GraphDeliver
                     break;
                 case 0x0008:
                     {
-                        if (count < 16)
+                        if (count < 16 + dataLength)
                         {
                             break;
                         }
@@ -317,24 +317,24 @@ namespace GraphDeliver
                     break;
                 case 0x00f0:
                     {
-                        if (count < 16)
+                        if (count < 16 + dataLength + 8)
                         {
                             break;
                         }
                         byte messageType = data[12];
                         string typeHex = messageType.ToString("X2");
-                        string message = Encoding.Default.GetString(data, 16, dataLength) + typeHex;
+                        string message = Encoding.Default.GetString(data, 16, dataLength + 8) + typeHex;
                         MessageReceived?.Invoke(message);
                     }
                     break;
                 case 0x0005:
                     {
-                        if (count < 62 * 2 + 20)
+                        if (count < 62 * 2 + 22)
                         {
                             break;
                         }
                         byte[] status = new byte[62 * 2];
-                        Buffer.BlockCopy(data, 20, status, 0, 62 * 2);
+                        Buffer.BlockCopy(data, 22, status, 0, 62 * 2);
                         RollingDataReceived?.Invoke(status);
                     }
                     break;
