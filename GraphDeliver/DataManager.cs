@@ -24,9 +24,15 @@ namespace GraphDeliver
 
         public void ClearData()
         {
+            _hostOnline = 0x74;
             _deviceStatusList.Clear();
-            _boardStatusList.Clear();
             _messageList.Clear();
+            _boardStatusList[0] = new byte[BoardStatusSize];
+            _boardStatusList[1] = new byte[BoardStatusSize];
+            _rollingDataList[0] = "";
+            _rollingDataList[1] = "";
+            _rollingRawDataList[0] = new byte[62];
+            _rollingRawDataList[1] = new byte[62];
 
             UpdateTime = DateTime.Now;
         }
