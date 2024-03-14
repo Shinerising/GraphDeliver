@@ -17,7 +17,7 @@ namespace GraphDeliver
         private readonly List<byte[]> _deviceStatusList = new List<byte[]>();
         private readonly List<byte[]> _boardStatusList = new List<byte[]>(2) { new byte[BoardStatusSize], new byte[BoardStatusSize] };
         private readonly List<string> _messageList = new List<string>();
-        private readonly List<string> _rollingDataList = new List<string>(2) { "", "" };
+        private readonly List<string> _rollingDataList = new List<string>();
         private readonly List<byte[]> _rollingRawDataList = new List<byte[]>(2) { new byte[62], new byte[62] };
 
         public DateTime UpdateTime { get; set; }
@@ -27,10 +27,9 @@ namespace GraphDeliver
             _hostOnline = 0x74;
             _deviceStatusList.Clear();
             _messageList.Clear();
+            _rollingDataList.Clear();
             _boardStatusList[0] = new byte[BoardStatusSize];
             _boardStatusList[1] = new byte[BoardStatusSize];
-            _rollingDataList[0] = "";
-            _rollingDataList[1] = "";
             _rollingRawDataList[0] = new byte[62];
             _rollingRawDataList[1] = new byte[62];
 
@@ -69,6 +68,10 @@ namespace GraphDeliver
         public void PushMessage(string message)
         {
             if (_messageList.Count > 100)
+            {
+                return;
+            }
+            if (_messageList.Last() == message)
             {
                 return;
             }
@@ -159,8 +162,12 @@ namespace GraphDeliver
                 string state = buffer[offset] == 0xc0 ? "正在溜放" : buffer[offset] == 0xc8 ? "等待溜放" : "溜放结束";
                 int cutCount = buffer[offset + 3] + 1;
                 string trainName = Encoding.Default.GetString(buffer, offset + 27, 13).Trim();
-                string message = $"{state} 车次:{trainName} 勾序:{cutCount}";
-                _rollingDataList[i] = message;
+                if (string.IsNullOrEmpty(trainName))
+                {
+                    continue;
+                }
+                string message = $"{state} 车次:{trainName} 序号:{cutCount}";
+                _rollingDataList.Add(message);
                 _rollingRawDataList[i] = data;
             }
         }
@@ -168,8 +175,7 @@ namespace GraphDeliver
         public byte[] GetAllRollingData()
         {
             byte[] data = Encoding.UTF8.GetBytes(string.Join(Environment.NewLine, _rollingDataList));
-            _rollingDataList[0] = "";
-            _rollingDataList[1] = "";
+            _rollingDataList.Clear();
             return data;
         }
 
