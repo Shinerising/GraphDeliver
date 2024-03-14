@@ -204,7 +204,7 @@ namespace GraphDeliver
             byte[] compressedData = CompressByteArray(data);
 
             ushort length = (ushort)(compressedData.Length + 2);
-            uint timestamp = (uint)(UpdateTime - new DateTime(1970, 1, 1)).TotalSeconds;
+            uint timestamp = (uint)(DateTime.Now - new DateTime(1970, 1, 1)).TotalSeconds;
             byte[] packedData = new byte[length + 7];
             BitConverter.GetBytes(timestamp).CopyTo(packedData, 0);
             packedData[4] = 0x04;

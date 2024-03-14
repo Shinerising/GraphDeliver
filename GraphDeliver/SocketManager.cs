@@ -322,7 +322,8 @@ namespace GraphDeliver
                             break;
                         }
                         byte messageType = data[12];
-                        string message = Encoding.Default.GetString(data, 16, dataLength) + (char)messageType;
+                        string typeHex = messageType.ToString("X2");
+                        string message = Encoding.Default.GetString(data, 16, dataLength) + typeHex;
                         MessageReceived?.Invoke(message);
                     }
                     break;
