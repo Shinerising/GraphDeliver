@@ -1,6 +1,6 @@
 # 设备状态实时传输工具
 
-一款支持通过串口快速转发来自网络的多类型状态数据的的轻量级软件。
+一款支持通过串口快速转发来自网络的多类型状态数据的轻量级软件。
 
 [![.NET Build](https://github.com/Shinerising/GraphDeliver/actions/workflows/dotnet-build.yml/badge.svg)](https://github.com/Shinerising/ComTransfer/actions/workflows/dotnet-build.yml)
 [![.NET Release](https://github.com/Shinerising/GraphDeliver/actions/workflows/dotnet-release.yml/badge.svg)](https://github.com/Shinerising/ComTransfer/actions/workflows/dotnet-release.yml)
