@@ -74,7 +74,7 @@ namespace GraphDeliver
 
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressA, out IPAddress ipAddressA, out int portA);
             CommunicationClient.GetAddressFromString(AppSettings.HostAddressB, out IPAddress ipAddressB, out int portB);
-            _socketManager = new SocketManager(ipAddressA, ipAddressB, portA, portB, AppSettings.IdleCount);
+            _socketManager = new SocketManager(ipAddressA, ipAddressB, portA, portB, AppSettings.IdleCount, AppSettings.RepeatCheck);
 
             _dataManager = new DataManager();
 

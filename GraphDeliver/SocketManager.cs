@@ -27,6 +27,7 @@ namespace GraphDeliver
         private readonly IPAddress _ipAddressB;
         private readonly int _portB = 1000;
         private readonly int _idleCount = 5;
+        private readonly bool _repeatCheck = true;
 
         private int _receiveCountA = 0;
         private int _receiveCountB = 0;
@@ -53,7 +54,7 @@ namespace GraphDeliver
         public string NameB => _clientB != null && _ipAddressB != null ? $"{_ipAddressB}:{_portB}" : "未启用";
         public bool IsConnected { get; set; }
 
-        public SocketManager(IPAddress ipAddressA, IPAddress ipAddressB, int portA = 1000, int portB = 1000, int idleCount = 5)
+        public SocketManager(IPAddress ipAddressA, IPAddress ipAddressB, int portA = 1000, int portB = 1000, int idleCount = 5, bool repeatCheck = true)
         {
             _clientA = new SocketTCPClient();
             _clientB = new SocketTCPClient();
@@ -68,6 +69,7 @@ namespace GraphDeliver
             _portB = portB;
 
             _idleCount = idleCount;
+            _repeatCheck = repeatCheck;
 
             SetClient();
 
@@ -285,7 +287,7 @@ namespace GraphDeliver
                 return;
             }
 
-            if (CheckIfRepeatPackage(index))
+            if (_repeatCheck && CheckIfRepeatPackage(index))
             {
                 return;
             }
