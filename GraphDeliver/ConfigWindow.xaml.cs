@@ -119,6 +119,7 @@ namespace GraphDeliver
 
             SaveAllConfig();
         }
+
         private void SaveAllConfig()
         {
             SaveConfig(new Dictionary<string, object>()
@@ -140,29 +141,19 @@ namespace GraphDeliver
         {
             try
             {
-                Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                foreach (var pair in dict)
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                foreach (var item in dict)
                 {
-                    object param = pair.Value;
-                    string key = pair.Key;
-                    if (param != null)
+                    if (config.AppSettings.Settings[item.Key] == null)
                     {
-                        if (configuration.AppSettings.Settings.AllKeys.Contains(key))
-                        {
-                            configuration.AppSettings.Settings[key].Value = param.ToString();
-                        }
-                        else
-                        {
-
-                            configuration.AppSettings.Settings.Add(key, param.ToString());
-                        }
+                        config.AppSettings.Settings.Add(item.Key, item.Value.ToString());
                     }
                     else
                     {
-                        configuration.AppSettings.Settings.Remove(key);
+                        config.AppSettings.Settings[item.Key].Value = item.Value.ToString();
                     }
                 }
-                configuration.Save(ConfigurationSaveMode.Minimal, true);
+                config.Save(ConfigurationSaveMode.Modified);
                 ConfigurationManager.RefreshSection("appSettings");
             }
             catch
