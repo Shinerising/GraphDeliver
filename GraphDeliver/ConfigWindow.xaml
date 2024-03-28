@@ -41,13 +41,13 @@
                 <Label Content="波特率" Width="50"/>
                 <TextBox Text="{Binding BaudRate}" MaxLength="7" Width="60" Margin="0,2,4,2"/>
                 <Label Content="数据位" Width="50"/>
-                <TextBox Text="{Binding DataBits}" MaxLength="1" Width="26" Margin="0,2,4,2"/>
+                <TextBox Text="{Binding DataBits}" MaxLength="1" Width="26" Margin="0,2,4,2" IsReadOnly="True"/>
                 <Label Content="停止位" Width="50"/>
-                <TextBox Text="{Binding StopBits}" MaxLength="1" Width="26" Margin="0,2,4,2"/>
+                <TextBox Text="{Binding StopBits}" MaxLength="1" Width="26" Margin="0,2,4,2" IsReadOnly="True"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Label Content="校验方式" Width="60"/>
-                <TextBox Text="{Binding Parity}" Width="66" MaxLength="6" Margin="0,2,4,2"/>
+                <TextBox Text="{Binding Parity}" Width="66" MaxLength="6" Margin="0,2,4,2" IsReadOnly="True"/>
                 <Label Content="发送间隔" Width="60"/>
                 <TextBox Text="{Binding SendInterval}" Width="66" MaxLength="6" Margin="0,2,4,2"/>
                 <Label Content="超时计数" Width="60"/>
@@ -62,6 +62,9 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <CheckBox Content="是否允许开机自动启动" IsChecked="{Binding IsAutoStart}" Margin="4,2" Height="24" HorizontalAlignment="Center" VerticalContentAlignment="Center"/>
                 <CheckBox Content="是否启动后立即开始工作" IsChecked="{Binding IsAutoRun}" Margin="4,2" Height="24" HorizontalAlignment="Center" VerticalContentAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="重启程序后生效" Foreground="#808080" Margin="0,0,0,4"/>
             </StackPanel>
         </StackPanel>
     </Grid>
