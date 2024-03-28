@@ -8,7 +8,7 @@ using System.Windows;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("设备状态实时传输工具")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("一款支持通过串口快速转发来自网络的多类型状态数据的轻量级软件。")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("CRSCD")]
 [assembly: AssemblyProduct("CROP 编组场远程运维平台")]
